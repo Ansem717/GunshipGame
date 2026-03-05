@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public partial class MasterController : MonoBehaviour {
     
@@ -62,8 +61,6 @@ public partial class MasterController : MonoBehaviour {
     private GameObject pMenuPrefab;
     [HideInInspector]
     public PauseMenuController PauseMenu;
-
-    public GameObject MainMenu;
 
     public FrameBlock mFrameBlock;
     public int FrameBlockSize;
@@ -114,27 +111,6 @@ public partial class MasterController : MonoBehaviour {
 
         mFrameBlock = new FrameBlock(FrameBlockSize);
 
-        Graphic[] gItems = MainMenu.GetComponentsInChildren<Graphic>(true);
-        for (int i = 0; i < gItems.Length; i++) {
-            Graphic item = gItems[i];
-            if (item.TryGetComponent(out ActionList itemActionList)) {
-                A_FadeIn fadeIn = new A_FadeIn(
-                    graphic: item,
-                    _targetAlpha: item.color.a,
-                    _duration: 0.3f,
-                    _delay: 0.2f * i,
-                    _easing: EaseType.EaseIn
-                );
-                
-                if (item.TryGetComponent(out UIButton uiButton)) {
-                    uiButton.DelayInitialization();
-                    itemActionList.PushBack(new A_Callback(fadeIn, () => uiButton.Initialize()));
-                } else {
-                    itemActionList.PushBack(fadeIn);
-                }
-            }
-        }
-        MainMenu.SetActive(true);
 
     }
 
