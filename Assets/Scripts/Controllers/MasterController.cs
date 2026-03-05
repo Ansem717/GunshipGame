@@ -168,7 +168,6 @@ public partial class MasterController : MonoBehaviour {
             else PauseMenu.DespawnPauseMenu();
         }
 
-        if (!Paused) CollideMouseWithCardRaycast();
     }
 
     public void SetAutoplay(bool state) {
@@ -179,44 +178,6 @@ public partial class MasterController : MonoBehaviour {
     public void TogglePause() => Paused = !Paused;
     public void PauseGame() => Paused = true;
     public void UnpauseGame() => Paused = false;
-
-    [HideInInspector]
-    public CardObject cardUnderMouse;
-
-    public void CollideMouseWithCardRaycast() {
-        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-        RaycastHit2D[] hits = Physics2D.RaycastAll(mouseWorld, Vector2.zero);
-
-        CardObject next = null;
-        int bestOrder = int.MinValue;
-
-        foreach (var hit in hits) {
-            if (!hit.collider) continue;
-
-            CardObject card = hit.collider.GetComponent<CardObject>();
-            if (!card) continue;
-
-            int order = card.data.SortingOrder;
-
-            if (order > bestOrder) {
-                bestOrder = order;
-                next = card;
-            }
-        }
-
-        if (cardUnderMouse != next) {
-            cardUnderMouse?.OnHoverExit();
-            next?.OnHoverEnter();
-            cardUnderMouse = next;
-        }
-    }
-
-    public void SetZoneShowing(bool show) {
-        Zone.Showing = show;
-        if (show) Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.ShowZones);
-        else if (!show) Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.HideZones);
-    }
 
     public void QuitGame() {
 

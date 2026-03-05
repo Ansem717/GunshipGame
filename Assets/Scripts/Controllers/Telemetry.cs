@@ -34,16 +34,17 @@ public class Telemetry : MonoBehaviour {
 
     private class TelemetryEntry {
         public int frameStamp;
-        public int turn;
         public string name;
     }
 
+    /*
+     * KEEP THE PREVIOUS ENTRIES FOR REFERENCE
+     * 
     private class TelemetryCardEntry : TelemetryEntry {
         public int playerID;
         public bool didWin;
 
-        public TelemetryCardEntry(string _name, int playerID, bool didWin, int turn) {
-            this.turn = turn;
+        public TelemetryCardEntry(string _name, int playerID, bool didWin) {
             frameStamp = Time.frameCount;
             
             this.playerID = playerID;
@@ -54,7 +55,7 @@ public class Telemetry : MonoBehaviour {
 
         }
 
-        public override string ToString() => $"{frameStamp},{turn},{name},{playerID},{didWin}";
+        public override string ToString() => $"{frameStamp},{name},{playerID},{didWin}";
     }
 
     private List<TelemetryCardEntry> cardEntries;
@@ -63,15 +64,14 @@ public class Telemetry : MonoBehaviour {
         public int size;
         public int playerID;
 
-        public TelemetryTrickEntry(int size, int playerID, int turn) {
-            this.turn = turn;
+        public TelemetryTrickEntry(int size, int playerID) {
             frameStamp = Time.frameCount;
             this.size = size;
             this.playerID = playerID;
             name = "Trick";
         }
 
-        public override string ToString() => $"{frameStamp},{turn},{name},{playerID},{size}";
+        public override string ToString() => $"{frameStamp},{name},{playerID},{size}";
     }
 
     private List<TelemetryTrickEntry> trickEntries;
@@ -82,15 +82,15 @@ public class Telemetry : MonoBehaviour {
 
         public TelemetryMenuEntry(TelemetryMenuOption opt) {
             frameStamp = Time.frameCount;
-            turn = GameMaster.Turn;
             name = opt.ToString();
         }
 
-        public override string ToString() => $"{frameStamp},{turn},{name}"; 
+        public override string ToString() => $"{frameStamp},{name}"; 
 
     }
 
     private List<TelemetryMenuEntry> menuEntries;
+    */
 
     private class TelemetryPerformanceEntry {
         public float timeStamp;
@@ -123,31 +123,31 @@ public class Telemetry : MonoBehaviour {
     public void Start() {
 
 
-        cardEntries = new();
-        trickEntries = new();
-        menuEntries = new();
+        //cardEntries = new();
+        //trickEntries = new();
+        //menuEntries = new();
         performanceEntries = new();
 
         if (!UnitTest) return;
 
         ///Note: was not updated for performance entries.
         
-        RecordCardEntry("RawCard", 0, false, 0);
-        RecordCardEntry("StructCard", 1, false, 1);
-        RecordCardEntry("Another raw card", 2, true, 2);
+        //RecordCardEntry("RawCard", 0, false, 0);
+        //RecordCardEntry("StructCard", 1, false, 1);
+        //RecordCardEntry("Another raw card", 2, true, 2);
 
-        RecordTrickEntry(3, 2, 2);
-        RecordTrickEntry(10, 1, 5);
+        //RecordTrickEntry(3, 2, 2);
+        //RecordTrickEntry(10, 1, 5);
 
-        RecordMenuEntry(TelemetryMenuOption.Open);
-        RecordMenuEntry(TelemetryMenuOption.Settings);
-        RecordMenuEntry(TelemetryMenuOption.ShowZones);
-        RecordMenuEntry(TelemetryMenuOption.SettingsBack);
-        RecordMenuEntry(TelemetryMenuOption.Resume);
+        //RecordMenuEntry(TelemetryMenuOption.Open);
+        //RecordMenuEntry(TelemetryMenuOption.Settings);
+        //RecordMenuEntry(TelemetryMenuOption.ShowZones);
+        //RecordMenuEntry(TelemetryMenuOption.SettingsBack);
+        //RecordMenuEntry(TelemetryMenuOption.Resume);
 
-        RecordCardEntry("CARD_FOUR", 0, false, 10);
-        RecordCardEntry("CARD_FIVE", 1, false, 11);
-        RecordCardEntry("CARD_SIX", 2, true, 12);
+        //RecordCardEntry("CARD_FOUR", 0, false, 10);
+        //RecordCardEntry("CARD_FIVE", 1, false, 11);
+        //RecordCardEntry("CARD_SIX", 2, true, 12);
 
         Debug.LogError("Telemetry Unit Test Complete. Quitting Game.");
 
@@ -159,17 +159,17 @@ public class Telemetry : MonoBehaviour {
     //// METHODS ////
     /////////////////
 
-    public void RecordCardEntry(string name, int playerID, bool didWin, int turn) => cardEntries.Add(new TelemetryCardEntry(name, playerID, didWin, turn));
-    public void RecordTrickEntry(int size, int playerID, int turn) => trickEntries.Add(new TelemetryTrickEntry(size, playerID, turn));
-    public void RecordMenuEntry(TelemetryMenuOption opt) => menuEntries.Add(new TelemetryMenuEntry(opt));
+    //public void RecordCardEntry(string name, int playerID, bool didWin, int turn) => cardEntries.Add(new TelemetryCardEntry(name, playerID, didWin));
+    //public void RecordTrickEntry(int size, int playerID, int turn) => trickEntries.Add(new TelemetryTrickEntry(size, playerID, turn));
+    //public void RecordMenuEntry(TelemetryMenuOption opt) => menuEntries.Add(new TelemetryMenuEntry(opt));
     public void RecordPerformanceEntry(int blockSize, int minFrame, float meanFrame, int midFrame) => performanceEntries.Add(new TelemetryPerformanceEntry(Time.realtimeSinceStartup, blockSize, minFrame, meanFrame, midFrame));
 
     private void OnDestroy() => Save();
 
-    private void WriteCardHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,CARD NAME,PLAYER ID,DID TAKE TRICK?");
-    private void WriteTrickHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,NAME,PLAYER ID,TRICK SIZE");
-    private void WriteMenuHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,MENU OPTION");
-    private void WriteAllHeadline(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,NAME,PLAYER ID,TRICK SIZE |or| DID TAKE TRICK?");
+    //private void WriteCardHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,CARD NAME,PLAYER ID,DID TAKE TRICK?");
+    //private void WriteTrickHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,NAME,PLAYER ID,TRICK SIZE");
+    //private void WriteMenuHeadLine(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,MENU OPTION");
+    //private void WriteAllHeadline(StreamWriter stream) => stream.WriteLine("FRAMESTAMP,TURN,NAME,PLAYER ID,TRICK SIZE |or| DID TAKE TRICK?");
     private void WritePerformanceHeadLine(StreamWriter stream) => stream.WriteLine("TIMESTAMP,BLOCK SIZE,WORST,MEAN,MEDIAN");
 
     public void Save() {
@@ -188,9 +188,9 @@ public class Telemetry : MonoBehaviour {
         using StreamWriter stream = new(filePath);
 
         // Ensure data is in correct order
-        List<TelemetryCardEntry> cardEntriesSorted = cardEntries.OrderBy(e => e.turn).ToList();
-        List<TelemetryTrickEntry> trickEntriesSorted = trickEntries.OrderBy(e => e.turn).ToList();
-        List<TelemetryMenuEntry> menuEntriesSorted = menuEntries.OrderBy(e => e.frameStamp).ToList();
+        //List<TelemetryCardEntry> cardEntriesSorted = cardEntries.OrderBy(e => e.turn).ToList();
+        //List<TelemetryTrickEntry> trickEntriesSorted = trickEntries.OrderBy(e => e.turn).ToList();
+        //List<TelemetryMenuEntry> menuEntriesSorted = menuEntries.OrderBy(e => e.frameStamp).ToList();
         List<TelemetryPerformanceEntry> performanceEntriesSorted = performanceEntries.OrderBy(e => e.timeStamp).ToList();
 
         //Write file metadata first line
@@ -198,6 +198,7 @@ public class Telemetry : MonoBehaviour {
 
         stream.WriteLine();
         //Write card entries
+        /*
         WriteCardHeadLine(stream);
 
         foreach (TelemetryCardEntry cEntry in cardEntriesSorted) stream.WriteLine(cEntry);
@@ -230,6 +231,7 @@ public class Telemetry : MonoBehaviour {
         }
 
         stream.WriteLine();
+        */
         //Write perforance frame data
         WritePerformanceHeadLine(stream);
         foreach (TelemetryPerformanceEntry pEntry in performanceEntriesSorted) stream.WriteLine(pEntry);

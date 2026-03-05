@@ -95,21 +95,21 @@ public class PauseMenuController : MonoBehaviour {
         SettingItems = new Dictionary<string, ItemEntry> {
             ["Title"] = PauseItems["Title"], //do not reconstruct, just use the same entry
             ["Autoplay"] = new ItemEntry(transform.Find("Autoplay").gameObject, dirs[Random.Range(0, dirs.Count)]),
-            ["ShowZones"] = new ItemEntry(transform.Find("ShowZones").gameObject, dirs[Random.Range(0, dirs.Count)]),
             ["TimeSlider"] = new ItemEntry(transform.Find("TimeSlider").gameObject, dirs[Random.Range(0, dirs.Count)]),
             ["Back"] = new ItemEntry(transform.Find("Back").gameObject, dirs[Random.Range(0, dirs.Count)]),
         };
 
         SettingItems["Autoplay"].obj.GetComponent<Toggle>().isOn = MasterController.Singleton.Autoplay;
-        SettingItems["ShowZones"].obj.GetComponent<Toggle>().isOn = Zone.Showing;
         SettingItems["TimeSlider"].obj.GetComponent<Slider>().value = 1;
         timeCaption.text = "Normal Speed";
 
         pState = PauseState.Entering;
         MasterController.Singleton.actionListsDirty = true;
-        Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Open);
+        //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Open);
 
+        /*
         A_AutoplayRequired.SetOptionsForPause();
+        */
 
         if (TryGetComponent(out ActionList actionList)) {
             actionList.PushBack(new A_Callback(
@@ -155,9 +155,11 @@ public class PauseMenuController : MonoBehaviour {
         }
         if (pState != PauseState.MainPause) return;
         pState = PauseState.Leaving;
-        Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Resume);
+        //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Resume);
+        
+        /*
         A_AutoplayRequired.SetOptionsForGameplay();
-
+        */
 
         int i = 0;
         foreach ((string key, ItemEntry item) in PauseItems.OrderBy(_ => Random.value)) {
@@ -193,8 +195,11 @@ public class PauseMenuController : MonoBehaviour {
     public void SwapToSettingsView() {
         if (pState != PauseState.MainPause) return;
         pState = PauseState.MainPauseToSettings;
-        Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Settings);
+        //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.Settings);
+
+        /*
         A_AutoplayRequired.SetOptionsForSettings();
+        */
 
         int i = 0;
         foreach ((string key, ItemEntry item) in PauseItems.OrderBy(_ => Random.value)) {
@@ -257,8 +262,6 @@ public class PauseMenuController : MonoBehaviour {
                     SettingItems["Autoplay"].obj.GetComponent<Toggle>().onValueChanged.RemoveAllListeners();//clear listeners first
                     SettingItems["Autoplay"].obj.GetComponent<Toggle>().onValueChanged.AddListener(MasterController.Singleton.SetAutoplay);
 
-                    SettingItems["ShowZones"].obj.GetComponent<Toggle>().onValueChanged.RemoveAllListeners();
-                    SettingItems["ShowZones"].obj.GetComponent<Toggle>().onValueChanged.AddListener(MasterController.Singleton.SetZoneShowing);
 
                     SettingItems["TimeSlider"].obj.GetComponent<Slider>().onValueChanged.RemoveAllListeners();
                     SettingItems["TimeSlider"].obj.GetComponent<Slider>().onValueChanged.AddListener(TimeSliderChange);
@@ -270,8 +273,11 @@ public class PauseMenuController : MonoBehaviour {
     public void SwapToMainPause() {
         if (pState != PauseState.Settings) return;
         pState = PauseState.SettingsToMainPause;
-        Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SettingsBack);
+        //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SettingsBack);
+
+        /*
         A_AutoplayRequired.SetOptionsForPause();
+        */
 
         int i = 0;
         foreach ((string key, ItemEntry item) in SettingItems.OrderBy(_ => Random.value)) {
@@ -342,27 +348,27 @@ public class PauseMenuController : MonoBehaviour {
             case 0:
                 MasterController.Singleton.SetTime(0.5f);
                 timeCaption.text = "Slow Speed";
-                Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedSlow);
+                //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedSlow);
                 break;
             case 1:
                 MasterController.Singleton.SetTime(1f);
                 timeCaption.text = "Normal Speed";
-                Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedNormal);
+                //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedNormal);
                 break;
             case 2:
                 MasterController.Singleton.SetTime(2f);
                 timeCaption.text = "Fast Speed";
-                Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedFast);
+                //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedFast);
                 break;
             case 3:
                 MasterController.Singleton.SetTime(4f);
                 timeCaption.text = "Ultra Speed";
-                Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedUltra);
+                //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedUltra);
                 break;
             default:
                 MasterController.Singleton.SetTime(1f);
                 timeCaption.text = "Normal Speed";
-                Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedNormal);
+                //Telemetry.Instance.RecordMenuEntry(Telemetry.TelemetryMenuOption.SpeedNormal);
                 break;
         }
     }

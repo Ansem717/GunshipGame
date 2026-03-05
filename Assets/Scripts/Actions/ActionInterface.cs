@@ -47,12 +47,12 @@ public abstract class ActionInterface {
     }
 
     /// <summary>
-    /// A pointer to the card data.
+    /// A reference to the game object.
     /// </summary>
-    public CardInstance cardReference;
+    public GameObject objRef;
 
     /// <summary>
-    /// A pointer to the owner of the action list. (Professor, I'm not sure what you mean by use "Entity ID" - why can't I just say "if owner == null"?)
+    /// A pointer to the owner of the action list. 
     /// </summary>
     protected ActionList owner;
     public ActionList Owner { get => owner; }
