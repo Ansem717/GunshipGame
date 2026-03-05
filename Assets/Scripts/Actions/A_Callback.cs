@@ -32,10 +32,12 @@ public class A_Callback : ActionInterface {
         return true; 
     }
 
+    public override void PostWait() {}
     public override void IUpdate(float dt) {
         if (action == null || action.State == ActionState.Done) State = ActionState.Done;
     }
 
     public override void Exit() => callback();
     public override float GetEstimatedDuration() => action.GetEstimatedDuration();
+
 }

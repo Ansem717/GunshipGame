@@ -37,7 +37,8 @@ public class A_ColorShift : ActionInterface {
         }
         return true;
     }
-
+    public override void PostWait() { }
+    
     public override void IUpdate(float dt) {
         if (duration <= 0f) {
             uiImg.color = To;

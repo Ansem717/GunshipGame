@@ -16,6 +16,9 @@ public class A_LoadScene : ActionInterface {
         return !SceneManager.GetSceneByName(SceneName).isLoaded; //if scene is loaded, return false to exit action early
     }
 
+    public override void PostWait() { }
+
+
     public override void IUpdate(float dt) {
 
         loading ??= SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);

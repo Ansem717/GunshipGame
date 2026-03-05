@@ -31,4 +31,7 @@ public class A_WaitThenCallback : ActionInterface {
     public override void Exit() {
         callback();
     }
+
+    public override void PostWait() { }
+
 }

@@ -20,6 +20,9 @@ public class A_UnloadScene : ActionInterface {
         return true;
     }
 
+    public override void PostWait() { }
+
+
     public override void IUpdate(float dt) {
 
         if (unloading == null) return;

@@ -15,8 +15,8 @@ using UnityEngine;
 public class SpaceSystem : MonoBehaviour {
 
     public GameObject starPrefab;
-    private List<GameObject> activeStars;
     public int starCount;
+    public List<GameObject> activeStars;
 
     void Start() {
         activeStars = new();
@@ -56,10 +56,17 @@ public class SpaceSystem : MonoBehaviour {
 
         GameObject star = Instantiate(starPrefab, pos, Quaternion.identity);
         star.transform.localScale *= Random.value;
+
+        if (star.TryGetComponent(out ActionList star_al)) {
+            star_al.PushFront(new A_Callback(
+                action: new A_StarController(), 
+                callback: () => {
+                    activeStars.Remove(star);
+                    Destroy(star);
+                }
+            ));
+        }
         return star;
     }
 
-    public void RemoveStar(GameObject star) {
-        activeStars.Remove(star);
-    }
 }

@@ -39,6 +39,7 @@ public class A_StaticBlocker : ActionInterface {
 
     /// StaticBlockers are never blocked by other StaticBlockers.
     public override bool CanBeBlockedBy(ActionInterface blocker) => blocker is not A_StaticBlocker;
+    public override void PostWait() { }
 
     public override void IUpdate(float dt) {
         if (CurrentFlag == targetFlag) State = ActionState.Done;

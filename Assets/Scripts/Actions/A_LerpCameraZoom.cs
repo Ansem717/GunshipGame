@@ -30,6 +30,9 @@ internal class A_LerpCameraZoom : ActionInterface {
         return true;
     }
 
+    public override void PostWait() { }
+
+
     public override void IUpdate(float dt) {
         if (duration <= 0f) {
             cam.orthographicSize = toZoom;

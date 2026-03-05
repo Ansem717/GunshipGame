@@ -30,6 +30,9 @@ public abstract class A_LerpVector3 : ActionInterface {
         return true;
     }
 
+    public override void PostWait() { }
+
+
     public override void IUpdate(float dt) {
         if (duration <= 0f) {
             SetCurrent(To);

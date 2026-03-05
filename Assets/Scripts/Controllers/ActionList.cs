@@ -36,9 +36,9 @@ public class ActionList : MonoBehaviour {
             if (act.State == ActionInterface.ActionState.Starting) {
                 bool stay = act.Init();
                 Debug.Log($"{gameObject.name} Action Started: {act.name}");
-                act.State = (!stay) ? ActionInterface.ActionState.Done :
-                    (act.delay > 0) ? ActionInterface.ActionState.Waiting :
-                                      ActionInterface.ActionState.Running;
+
+                act.State = !stay ? ActionInterface.ActionState.Done : ActionInterface.ActionState.Waiting;
+
             }
 
             float dt = Time.deltaTime * timeMultiplier;
@@ -47,6 +47,7 @@ public class ActionList : MonoBehaviour {
                 act.delayElapsed += dt;
                 //Debug.Log($"{gameObject.name} Action Waiting: {act.name} {100f * act.GetDelayProgress():F0}%");
                 if (act.delayElapsed >= act.delay) {
+                    act.PostWait();
                     act.State = ActionInterface.ActionState.Running;
                 }
 

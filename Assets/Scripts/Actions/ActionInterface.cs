@@ -60,7 +60,10 @@ public abstract class ActionInterface {
     /// <summary>
     /// A function to wrap owner setting for handling child actions.
     /// </summary>
-    public virtual void SetOwner(ActionList actionList) => owner = actionList;
+    public virtual void SetOwner(ActionList actionList) {
+        owner = actionList;
+        objRef = owner.gameObject;
+    }
 
     /// <summary>
     /// A string ID for this action
@@ -159,6 +162,11 @@ public abstract class ActionInterface {
     public abstract bool Init();
 
     /// <summary>
+    /// Additional one time call before update but after waiting (incase data changes or we're on a loop)
+    /// </summary>
+    public abstract void PostWait();
+
+    /// <summary>
     /// Update Loop.
     /// </summary>
     public abstract void IUpdate(float dt);
@@ -168,5 +176,11 @@ public abstract class ActionInterface {
     /// </summary>
     public abstract void Exit();
 
-    public string Log() => $"{name} | {(GetDelayProgress() < 1.0f ? "Waiting" : "Running")}";
+    public string Log() => $"{name} | {State}";
+
+    public void Loop() {
+        if (State != ActionState.Done) State = ActionState.Waiting;
+        elapsed = 0f;
+        delayElapsed = 0f;
+    }    
 }
