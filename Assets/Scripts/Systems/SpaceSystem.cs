@@ -63,6 +63,7 @@ public class SpaceSystem : MonoBehaviour {
                 callback: () => {
                     activeStars.Remove(star);
                     Destroy(star);
+                    MasterController.Singleton.actionListsDirty = true;
                 }
             ));
         }

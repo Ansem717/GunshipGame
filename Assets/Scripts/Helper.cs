@@ -32,4 +32,24 @@ public static class Helper {
                  bounds.max.y < min.y ||
                  bounds.min.y > max.y);
     }
+
+    public static GameObject CreatePlayer(GameObject fromPrefab) {
+        GameObject oldPlayer = GameObject.Find("Player");
+        GameObject newPlayer = Object.Instantiate(fromPrefab);
+        
+        if (oldPlayer != null) {
+            //Copy data from oldPlayer to newPlayer
+            //TODO: Create Helper functions if needed to copy PlayerController() data
+            newPlayer.transform.SetPositionAndRotation(oldPlayer.transform.position, oldPlayer.transform.rotation);
+            Object.Destroy(oldPlayer);
+        } else {
+            //TODO: Add this back in when replacing data is implemented
+            //newPlayer.AddComponent<PlayerController>();
+        }
+
+        //TODO: Remove this when replacing data is implemented
+        newPlayer.AddComponent<PlayerController>();
+        newPlayer.name = "Player";
+        return newPlayer;
+    }
 }

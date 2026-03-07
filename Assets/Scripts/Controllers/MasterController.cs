@@ -31,7 +31,6 @@ public partial class MasterController : MonoBehaviour {
 
     public bool Autoplay;
 
-    private GameObject DebugPrefab;
     [HideInInspector]
     public DebugViewer debugViewer;
     private bool debugFlag;
@@ -58,7 +57,6 @@ public partial class MasterController : MonoBehaviour {
     [HideInInspector]
     public bool actionListsDirty;
 
-    private GameObject pMenuPrefab;
     [HideInInspector]
     public PauseMenuController PauseMenu;
 
@@ -67,6 +65,10 @@ public partial class MasterController : MonoBehaviour {
 
     [HideInInspector]
     public GameObject FrameBarPrefab;
+    private GameObject DebugPrefab;
+    private GameObject pMenuPrefab;
+
+    private List<GameObject> ShipPrefabs;
 
     private bool _paused;
     public bool Paused {
@@ -111,7 +113,13 @@ public partial class MasterController : MonoBehaviour {
 
         mFrameBlock = new FrameBlock(FrameBlockSize);
 
+        ShipPrefabs = new() {
+            Resources.Load<GameObject>("Prefabs/GunshipSmall"),
+            Resources.Load<GameObject>("Prefabs/GunshipMedium"),
+            Resources.Load<GameObject>("Prefabs/GunshipLarge"),
+        };
 
+        Helper.CreatePlayer(ShipPrefabs[0]);
     }
 
     private void Update() {
@@ -135,7 +143,7 @@ public partial class MasterController : MonoBehaviour {
             SetAutoplay(!Autoplay);
         }
 
-        if (Input.GetKeyDown(KeyCode.D)) {
+        if (Input.GetKeyDown(KeyCode.B)) {
             DebugFlag = !DebugFlag;
         }
 
@@ -143,6 +151,10 @@ public partial class MasterController : MonoBehaviour {
             if (PauseMenu == null) PauseGame();
             else PauseMenu.DespawnPauseMenu();
         }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1)) Helper.CreatePlayer(ShipPrefabs[0]);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) Helper.CreatePlayer(ShipPrefabs[1]);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) Helper.CreatePlayer(ShipPrefabs[2]);
 
     }
 

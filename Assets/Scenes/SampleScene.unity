@@ -496,6 +496,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   starPrefab: {fileID: 6903034653066462981, guid: dc321d6b73a583142b95748e4a12f5d3, type: 3}
   starCount: 50
+  activeStars: []
 --- !u!4 &1918764804
 Transform:
   m_ObjectHideFlags: 0

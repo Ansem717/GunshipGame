@@ -63,6 +63,10 @@ public class DebugViewer : MonoBehaviour {
         string actext = "<size=36><align=center><b>Actions</b></align></size>\n";
 
         foreach (ActionList aList in MasterController.Singleton.actionLists.OrderBy(al => al.DebugSortOrder)) {
+            if (aList.gameObject == null) {
+                Debug.LogWarning("An action list has been destroyed, but the MasterController did not update!");
+                continue;
+            }
             if (aList.actions.Count == 0) continue;
             actext += $"{aList.gameObject.name}:\n";
             foreach (ActionInterface aInterface in aList.actions) {
