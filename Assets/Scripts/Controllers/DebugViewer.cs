@@ -15,9 +15,6 @@ public class DebugViewer : MonoBehaviour {
     public float duration;
     public EaseType easing;
 
-    public LineRenderer avgLine;
-    public LineRenderer medLine;
-
     private List<GameObject> bars;
 
     void Start() {

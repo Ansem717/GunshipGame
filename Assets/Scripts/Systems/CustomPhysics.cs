@@ -17,10 +17,6 @@ public class CustomPhysics : MonoBehaviour {
     public float maxRotationalVelocity;
     public float rotationalJerkStrength;
 
-    [Header("Debug")]
-    [Tooltip("Debug lines are only shown in SCENE view, not game view")]
-    public bool ShowSceneDebugLines;
-
     private float velocity;
     private float acceleration;
     private float jerk;
@@ -34,10 +30,16 @@ public class CustomPhysics : MonoBehaviour {
     private MovementState moveState;
     private RotationState rotationState;
 
+    [Header("Debug Lines")]
     public LineRenderer VelLine;
     public LineRenderer RotLine;
 
     void Start() {
+
+        if (transform.parent == null) {
+            Debug.LogError("ERROR: CustomPhysics script cannot be a root level entity.");
+        }
+
         velocity = 0;      
         acceleration = 0;  
         jerk = 0;          
@@ -47,6 +49,20 @@ public class CustomPhysics : MonoBehaviour {
 
         moveState = MovementState.None;
         rotationState = RotationState.None;
+    }
+
+    public void LoadData(CustomPhysics_SO data) {
+        drag = data.drag;
+        angularDrag = data.angularDrag;
+
+        maximumAcceleration = data.maximumAcceleration;
+        brakeAcceleration = data.brakeAcceleration;
+        maxVelocity = data.maxVelocity;
+        jerkStrength = data.jerkStrength;
+
+        maxRotationalAcceleration = data.maxRotationalAcceleration;
+        maxRotationalVelocity = data.maxRotationalVelocity;
+        rotationalJerkStrength = data.rotationalJerkStrength;
     }
 
     void FixedUpdate() {
@@ -62,10 +78,8 @@ public class CustomPhysics : MonoBehaviour {
 
         //Apply Movement
         Vector3 end = transform.up * velocity;
-        if (ShowSceneDebugLines) Debug.DrawLine(transform.position, end, Color.green);
-        transform.position += end * dt;
-        if (ShowSceneDebugLines) Debug.DrawLine(transform.position, dt * -rotationalVelocity * transform.right, Color.red);
-        transform.Rotate(0, 0, rotationalVelocity * dt);
+        transform.parent.position += end * dt;
+        transform.parent.Rotate(0, 0, rotationalVelocity * dt);
 
         if (MasterController.Singleton.DebugFlag) {
             VelLine.gameObject.SetActive(true);

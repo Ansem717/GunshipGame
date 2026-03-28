@@ -15,7 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public partial class MasterController : MonoBehaviour {
-    
+
     public static MasterController Singleton;
 
     void Awake() {
@@ -34,8 +34,8 @@ public partial class MasterController : MonoBehaviour {
     [HideInInspector]
     public DebugViewer debugViewer;
     private bool debugFlag;
-    public bool DebugFlag { 
-        get => debugFlag; 
+    public bool DebugFlag {
+        get => debugFlag;
         set {
             if (debugFlag == value) return;
             debugFlag = value;
@@ -68,7 +68,27 @@ public partial class MasterController : MonoBehaviour {
     private GameObject DebugPrefab;
     private GameObject pMenuPrefab;
 
-    private List<GameObject> ShipPrefabs;
+    public enum GunshipSize { Small, Medium, Large };
+    public class GunshipData {
+        public GunshipSize size;
+        public float scale;
+        public CustomPhysics_SO physicsData;
+
+        public GunshipData(GunshipSize size, float scale, CustomPhysics_SO physicsData) {
+            this.size = size;
+            this.scale = scale;
+            this.physicsData = physicsData;
+        }
+    }
+
+    [HideInInspector]
+    public GameObject GunshipPrefab;
+    [HideInInspector]
+    public Dictionary<GunshipSize, GunshipData> GunshipDatas;
+    [HideInInspector]
+    public GameObject CustomPhysicsPrefab;
+
+    public PlayerController player;
 
     private bool _paused;
     public bool Paused {
@@ -103,9 +123,6 @@ public partial class MasterController : MonoBehaviour {
     private void Start() {
         actionLists = new();
         actionListsDirty = true;
-        pMenuPrefab = Resources.Load<GameObject>("Prefabs/PauseMenu");
-        DebugPrefab = Resources.Load<GameObject>("Prefabs/DebugUI");
-        FrameBarPrefab = Resources.Load<GameObject>("Prefabs/Bar");
         PauseMenu = null;
         globalTimeMultiplier = 1.0f;
         DebugFlag = false;
@@ -113,13 +130,21 @@ public partial class MasterController : MonoBehaviour {
 
         mFrameBlock = new FrameBlock(FrameBlockSize);
 
-        ShipPrefabs = new() {
-            Resources.Load<GameObject>("Prefabs/GunshipSmall"),
-            Resources.Load<GameObject>("Prefabs/GunshipMedium"),
-            Resources.Load<GameObject>("Prefabs/GunshipLarge"),
+        pMenuPrefab = Resources.Load<GameObject>("Prefabs/Misc/PauseMenu");
+        DebugPrefab = Resources.Load<GameObject>("Prefabs/Debug/DebugUI"); 
+        FrameBarPrefab = Resources.Load<GameObject>("Prefabs/Debug/Bar");  
+
+        GunshipPrefab = Resources.Load<GameObject>("Prefabs/Gunship/GunshipTriangle");
+        CustomPhysicsPrefab = Resources.Load<GameObject>("Prefabs/Components/CustomPhysicsComponent");
+
+        GunshipDatas = new() {
+            [GunshipSize.Small] = new(GunshipSize.Small, 0.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Small")),
+            [GunshipSize.Medium] = new(GunshipSize.Medium, 1.3f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Medium")),
+            [GunshipSize.Large] = new(GunshipSize.Large, 1.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Large")),
         };
 
-        Helper.CreatePlayer(ShipPrefabs[0]);
+        GameObject playerOBJ = Instantiate(GunshipPrefab);
+        player = playerOBJ.AddComponent<PlayerController>();
     }
 
     private void Update() {
@@ -152,9 +177,9 @@ public partial class MasterController : MonoBehaviour {
             else PauseMenu.DespawnPauseMenu();
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha1)) Helper.CreatePlayer(ShipPrefabs[0]);
-        if (Input.GetKeyDown(KeyCode.Alpha2)) Helper.CreatePlayer(ShipPrefabs[1]);
-        if (Input.GetKeyDown(KeyCode.Alpha3)) Helper.CreatePlayer(ShipPrefabs[2]);
+        if (Input.GetKeyDown(KeyCode.Alpha1)) player.LoadGunship(GunshipSize.Small);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) player.LoadGunship(GunshipSize.Medium);
+        if (Input.GetKeyDown(KeyCode.Alpha3)) player.LoadGunship(GunshipSize.Large);
 
     }
 

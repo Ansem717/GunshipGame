@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public static class Helper {
@@ -33,23 +34,30 @@ public static class Helper {
                  bounds.min.y > max.y);
     }
 
-    public static GameObject CreatePlayer(GameObject fromPrefab) {
-        GameObject oldPlayer = GameObject.Find("Player");
-        GameObject newPlayer = Object.Instantiate(fromPrefab);
-        
-        if (oldPlayer != null) {
-            //Copy data from oldPlayer to newPlayer
-            //TODO: Create Helper functions if needed to copy PlayerController() data
-            newPlayer.transform.SetPositionAndRotation(oldPlayer.transform.position, oldPlayer.transform.rotation);
-            Object.Destroy(oldPlayer);
-        } else {
-            //TODO: Add this back in when replacing data is implemented
-            //newPlayer.AddComponent<PlayerController>();
+    public class ChildrenTree {
+        public GameObject obj;
+        public List<ChildrenTree> children = new List<ChildrenTree>();
+
+        public void ReattachAndDestroy(GameObject newParent) {
+            foreach (ChildrenTree child in children) {
+                child.obj.transform.SetParent(newParent.transform);
+            }
+
+            newParent.transform.SetPositionAndRotation(obj.transform.position, obj.transform.rotation);
+
+            Object.Destroy(obj);
+            obj = newParent;
+        }
+    }
+
+    public static ChildrenTree GetChildrenRecursive(Transform parent) {
+        ChildrenTree p_tree = new() {obj = parent.gameObject}; //establish THIS object's heirarchy node.
+
+        foreach (Transform child in parent) { //for each of this object's children
+            p_tree.children.Add(GetChildrenRecursive(child)); //establish the children's heirarchy recursively.
         }
 
-        //TODO: Remove this when replacing data is implemented
-        newPlayer.AddComponent<PlayerController>();
-        newPlayer.name = "Player";
-        return newPlayer;
+        return p_tree;
     }
+
 }

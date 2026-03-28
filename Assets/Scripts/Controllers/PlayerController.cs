@@ -29,28 +29,45 @@ public class PlayerController : MonoBehaviour {
     }
 
     private Dictionary<Action<float>, InputEntry> InputKeys;
+    
     private CustomPhysics physics;
 
     void Start() {
-        if (!TryGetComponent(out physics)) Debug.LogError("FAILURE TO FIND PHYSICS FOR PLAYER!");
 
+        Instantiate(MasterController.Singleton.CustomPhysicsPrefab, transform); //attach physics to THIS
+        physics = GetComponentInChildren<CustomPhysics>(); //capture the script
+        if (!physics) {
+            Debug.LogError("FAILURE TO FIND PHYSICS FOR PLAYER!"); //check it exists
+        } else {
 
-        InputKeys = new() {
-            [physics.ApplyThrustInput] = new InputEntry(
-                name: "Move",
-                func: physics.ApplyThrustInput,
-                posKeys: new List<KeyCode> { KeyCode.W, KeyCode.UpArrow },
-                negKeys: new List<KeyCode> { KeyCode.S, KeyCode.DownArrow }
-            ),
+            //it does exist, attach functions
+            InputKeys = new() {
+                [physics.ApplyThrustInput] = new InputEntry(
+                    name: "Move",
+                    func: physics.ApplyThrustInput,
+                    posKeys: new List<KeyCode> { KeyCode.W, KeyCode.UpArrow },
+                    negKeys: new List<KeyCode> { KeyCode.S, KeyCode.DownArrow }
+                ),
 
-            [physics.ApplyRotationalInput] = new InputEntry(
-                name: "Rotate",
-                func: physics.ApplyRotationalInput,
-                posKeys: new List<KeyCode> { KeyCode.A, KeyCode.LeftArrow },
-                negKeys: new List<KeyCode> { KeyCode.D, KeyCode.RightArrow }
-            ),
-        };
+                [physics.ApplyRotationalInput] = new InputEntry(
+                    name: "Rotate",
+                    func: physics.ApplyRotationalInput,
+                    posKeys: new List<KeyCode> { KeyCode.A, KeyCode.LeftArrow },
+                    negKeys: new List<KeyCode> { KeyCode.D, KeyCode.RightArrow }
+                ),
+            };
 
+            //but also load in data for small gunship
+            LoadGunship(MasterController.GunshipSize.Small);
+        }
+    }
+
+    public void LoadGunship(MasterController.GunshipSize size) {
+        MasterController.GunshipData data = MasterController.Singleton.GunshipDatas[size];
+        if (data != null && physics != null) {
+            physics.LoadData(data.physicsData);
+            transform.localScale = MasterController.Singleton.GunshipPrefab.transform.localScale * data.scale;
+        }
     }
 
     void Update() {
