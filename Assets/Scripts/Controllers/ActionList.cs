@@ -35,7 +35,7 @@ public class ActionList : MonoBehaviour {
 
             if (act.State == ActionInterface.ActionState.Starting) {
                 bool stay = act.Init();
-                Debug.Log($"{gameObject.name} Action Started: {act.name}");
+                //Debug.Log($"{gameObject.name} Action Started: {act.name}");
 
                 act.State = !stay ? ActionInterface.ActionState.Done : ActionInterface.ActionState.Waiting;
 
@@ -57,7 +57,7 @@ public class ActionList : MonoBehaviour {
                 act.IUpdate(dt);
 
             } else if (act.State == ActionInterface.ActionState.Done) {
-                Debug.Log($"{gameObject.name} Action Done: {act.name}");
+                //Debug.Log($"{gameObject.name} Action Done: {act.name}");
                 act.Exit();
                 act.markedForDelete = true;
                 act.blocking = false; //finished actions immediatly stop blocking
@@ -107,7 +107,7 @@ public class ActionList : MonoBehaviour {
             existing.markedForDelete = true; //only one action with the same name can exist in the list. 
         }
         ai.SetOwner(this);
-        Debug.Log($"{gameObject.name} Action added: {ai.name}");
+        //Debug.Log($"{gameObject.name} Action added: {ai.name}");
         pendingActions.Add((pos, ai));
     }
 

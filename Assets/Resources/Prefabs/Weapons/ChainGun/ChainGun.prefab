@@ -44,3 +44,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9644085d0098774f9c125628cdde456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  WindupTimeToMax: 20
+  CooldownMultipler: 1.25
+  Acceleration: 16
+  MinimumFireRate: 1
+  MaximumFireRate: 16
+  BulletSpeed: 10
+  BulletLifetime: 2
+  MinDeviation: 4
+  MaxDeviation: 16
+  indicatorOffset: {x: 0, y: -0.5, z: 0}
+  coneFadeDuration: 0.5

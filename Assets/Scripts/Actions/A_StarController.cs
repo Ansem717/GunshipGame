@@ -15,7 +15,6 @@ public class A_StarController : ActionInterface {
     public override void PostWait() {
         float angleValue = (Random.value < 0.5f) ? -rotationValue : rotationValue;
         angle = (objRef.transform.rotation.eulerAngles.z + angleValue) % 360;
-        Debug.Log(duration);
         Owner.PushBack(new A_Rotate(angle, _duration: duration, _easing: easing));
     }
 

@@ -47,7 +47,7 @@ public class DebugViewer : MonoBehaviour {
         float graphWidth = performanceGraphPanel.sizeDelta.x;
 
         for (int i = 0; i < MasterController.Singleton.FrameBlockSize; i++) {
-            GameObject barO = Instantiate(MasterController.Singleton.FrameBarPrefab, performanceGraphPanel);
+            GameObject barO = Instantiate(MasterController.Singleton.prefabs["DebugBar"], performanceGraphPanel);
             bars.Add(barO);
             barO.GetComponent<RectTransform>().sizeDelta = new Vector2(graphWidth / MasterController.Singleton.FrameBlockSize, 0);
         }
@@ -60,9 +60,10 @@ public class DebugViewer : MonoBehaviour {
         string actext = "<size=36><align=center><b>Actions</b></align></size>\n";
 
         foreach (ActionList aList in MasterController.Singleton.actionLists.OrderBy(al => al.DebugSortOrder)) {
-            if (aList.gameObject == null) {
+            if (aList == null || aList.gameObject == null) {
                 Debug.LogWarning("An action list has been destroyed, but the MasterController did not update!");
-                continue;
+                MasterController.Singleton.actionListsDirty = true;
+                return;
             }
             if (aList.actions.Count == 0) continue;
             actext += $"{aList.gameObject.name}:\n";

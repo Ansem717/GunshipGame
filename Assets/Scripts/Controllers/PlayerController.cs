@@ -31,50 +31,64 @@ public class PlayerController : MonoBehaviour {
     private Dictionary<Action<float>, InputEntry> InputKeys;
     
     private CustomPhysics physics;
+    private ChainGun chaingun;
 
     void Start() {
 
-        Instantiate(MasterController.Singleton.CustomPhysicsPrefab, transform); //attach physics to THIS
+        Instantiate(MasterController.Singleton.prefabs["CustomPhysicsComponent"], transform); //attach physics to this
         physics = GetComponentInChildren<CustomPhysics>(); //capture the script
-        if (!physics) {
-            Debug.LogError("FAILURE TO FIND PHYSICS FOR PLAYER!"); //check it exists
-        } else {
+        if (!physics) Debug.LogError("FAILURE TO FIND PHYSICS FOR PLAYER!"); //check it exists
 
-            //it does exist, attach functions
-            InputKeys = new() {
-                [physics.ApplyThrustInput] = new InputEntry(
-                    name: "Move",
-                    func: physics.ApplyThrustInput,
-                    posKeys: new List<KeyCode> { KeyCode.W, KeyCode.UpArrow },
-                    negKeys: new List<KeyCode> { KeyCode.S, KeyCode.DownArrow }
-                ),
+        Instantiate(MasterController.Singleton.prefabs["ChainGun"], transform); //attach chain gun
+        chaingun = GetComponentInChildren<ChainGun>();
+        if (!chaingun) Debug.LogError("FAILURE TO FIND CHAINGUN FOR PLAYER!"); //check it exists
 
-                [physics.ApplyRotationalInput] = new InputEntry(
-                    name: "Rotate",
-                    func: physics.ApplyRotationalInput,
-                    posKeys: new List<KeyCode> { KeyCode.A, KeyCode.LeftArrow },
-                    negKeys: new List<KeyCode> { KeyCode.D, KeyCode.RightArrow }
-                ),
-            };
+        InputKeys = new() {
 
-            //but also load in data for small gunship
-            LoadGunship(MasterController.GunshipSize.Small);
-        }
+            //Move W,Up,S,Down
+            [physics.ApplyThrustInput] = new InputEntry(
+                name: "Move",
+                func: physics.ApplyThrustInput,
+                posKeys: new List<KeyCode> { KeyCode.W, KeyCode.UpArrow },
+                negKeys: new List<KeyCode> { KeyCode.S, KeyCode.DownArrow }
+            ),
+
+            //Rotate A,Left,D,Right
+            [physics.ApplyRotationalInput] = new InputEntry(
+                name: "Rotate",
+                func: physics.ApplyRotationalInput,
+                posKeys: new List<KeyCode> { KeyCode.A, KeyCode.LeftArrow },
+                negKeys: new List<KeyCode> { KeyCode.D, KeyCode.RightArrow }
+            ),
+
+            //ChainGun Space, Left Mouse Button
+            [chaingun.Use] = new InputEntry(
+                name: "Fire_ChainGun",
+                func: chaingun.Use,
+                posKeys: new List<KeyCode> { KeyCode.Space, KeyCode.Mouse0 },
+                negKeys: new List<KeyCode> { /* Not applicable */ }
+            )
+
+        };
+
+        //but also load in data for small gunship
+        LoadGunship(MasterController.GunshipSize.Small);
+        
     }
 
     public void LoadGunship(MasterController.GunshipSize size) {
         MasterController.GunshipData data = MasterController.Singleton.GunshipDatas[size];
         if (data != null && physics != null) {
             physics.LoadData(data.physicsData);
-            transform.localScale = MasterController.Singleton.GunshipPrefab.transform.localScale * data.scale;
+            transform.localScale = MasterController.Singleton.prefabs["GunshipTriangle"].transform.localScale * data.scale;
         }
     }
 
     void Update() {
         if (physics == null) return;
+        if (chaingun == null) return;
 
         foreach ((_, InputEntry entry) in InputKeys) {
-            Debug.Log($"{entry.name} with value {entry.CurrentValue}");
             entry.func(entry.CurrentValue);
         }
 

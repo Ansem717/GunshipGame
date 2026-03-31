@@ -24,6 +24,11 @@ public class CustomPhysics : MonoBehaviour {
     private float rotationalAcceleration;
     private float rotationalJerk;
 
+    /// <summary>
+    /// Returns the current velocity as a world-space vector.
+    /// </summary>
+    public Vector3 VelocityVector => transform.up * velocity;
+
     public enum MovementState { None, Forward, Backward }
     public enum RotationState { None, Left, Right }
 
@@ -85,11 +90,11 @@ public class CustomPhysics : MonoBehaviour {
             VelLine.gameObject.SetActive(true);
             RotLine.gameObject.SetActive(true);
 
-            VelLine.SetPosition(0, transform.position);
-            VelLine.SetPosition(1, transform.position + end);
+            VelLine.SetPosition(0, transform.parent.position);
+            VelLine.SetPosition(1, transform.parent.position + end);
 
-            RotLine.SetPosition(0, transform.position);
-            RotLine.SetPosition(1, transform.position + dt * -rotationalVelocity * transform.right);
+            RotLine.SetPosition(0, transform.parent.position);
+            RotLine.SetPosition(1, transform.parent.position + dt * -rotationalVelocity * transform.right);
 
         } else {
             VelLine.gameObject.SetActive(false);

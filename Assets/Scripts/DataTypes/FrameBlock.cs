@@ -45,6 +45,7 @@ public class FrameBlock {
             elapsed = 0;
             frames.Add(accumulatedFrames);
             accumulatedFrames = 0;
+            MasterController.Singleton.actionListsDirty = true;
 
             if (frames.Count > Size) {
                 frames.RemoveAt(0); //if we hit our capacity, we must discard the first item to keep the block "moving"

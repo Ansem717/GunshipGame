@@ -24,12 +24,12 @@ public class A_LoadScene : ActionInterface {
         loading ??= SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
 
         if (loading.isDone) {
-            Debug.Log("...DONE ! Loading Scene...");
+            //Debug.Log("...DONE ! Loading Scene...");
             MasterController.Singleton.actionListsDirty = true;
             State = ActionState.Done;
             return;
         }
-        Debug.Log("...Loading Scene...");
+        //Debug.Log("...Loading Scene...");
     }
 
     public override void Exit() { }

@@ -14,18 +14,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public partial class MasterController : MonoBehaviour {
+public class MasterController : MonoBehaviour {
 
     public static MasterController Singleton;
 
-    void Awake() {
-        if (Singleton != null) {
-            Destroy(gameObject);
-            return;
-        }
-        Singleton = this;
-        DontDestroyOnLoad(gameObject);
-    }
 
     //////////////////////////////
 
@@ -41,7 +33,7 @@ public partial class MasterController : MonoBehaviour {
             debugFlag = value;
             if (debugFlag) {
                 //show debug menu
-                GameObject instance = Instantiate(DebugPrefab);
+                GameObject instance = Instantiate(prefabs["DebugUI"]);
                 debugViewer = instance.GetComponent<DebugViewer>();
             } else {
                 //hide debug menu
@@ -64,9 +56,7 @@ public partial class MasterController : MonoBehaviour {
     public int FrameBlockSize;
 
     [HideInInspector]
-    public GameObject FrameBarPrefab;
-    private GameObject DebugPrefab;
-    private GameObject pMenuPrefab;
+    public Dictionary<string, GameObject> prefabs;
 
     public enum GunshipSize { Small, Medium, Large };
     public class GunshipData {
@@ -81,12 +71,7 @@ public partial class MasterController : MonoBehaviour {
         }
     }
 
-    [HideInInspector]
-    public GameObject GunshipPrefab;
-    [HideInInspector]
     public Dictionary<GunshipSize, GunshipData> GunshipDatas;
-    [HideInInspector]
-    public GameObject CustomPhysicsPrefab;
 
     public PlayerController player;
 
@@ -111,7 +96,7 @@ public partial class MasterController : MonoBehaviour {
                     actionList.PushFront(new A_StaticBlocker(SBFlag.PauseMenuExit));
                 }
 
-                GameObject instance = Instantiate(pMenuPrefab);
+                GameObject instance = Instantiate(prefabs["PauseMenu"]);
                 PauseMenu = instance.GetComponentInChildren<PauseMenuController>(true);
 
             } else {
@@ -120,7 +105,17 @@ public partial class MasterController : MonoBehaviour {
         }
     }
 
-    private void Start() {
+
+    void Awake() {
+        if (Singleton != null) {
+            Destroy(gameObject);
+            return;
+        }
+        Singleton = this;
+        DontDestroyOnLoad(gameObject);
+
+        ///////////////////////
+        
         actionLists = new();
         actionListsDirty = true;
         PauseMenu = null;
@@ -130,12 +125,12 @@ public partial class MasterController : MonoBehaviour {
 
         mFrameBlock = new FrameBlock(FrameBlockSize);
 
-        pMenuPrefab = Resources.Load<GameObject>("Prefabs/Misc/PauseMenu");
-        DebugPrefab = Resources.Load<GameObject>("Prefabs/Debug/DebugUI"); 
-        FrameBarPrefab = Resources.Load<GameObject>("Prefabs/Debug/Bar");  
+        prefabs = new();
 
-        GunshipPrefab = Resources.Load<GameObject>("Prefabs/Gunship/GunshipTriangle");
-        CustomPhysicsPrefab = Resources.Load<GameObject>("Prefabs/Components/CustomPhysicsComponent");
+        foreach (GameObject prefab in Resources.LoadAll<GameObject>("Prefabs")) {
+            //Debug.Log(prefab.name);
+            prefabs[prefab.name] = prefab;
+        }
 
         GunshipDatas = new() {
             [GunshipSize.Small] = new(GunshipSize.Small, 0.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Small")),
@@ -143,7 +138,11 @@ public partial class MasterController : MonoBehaviour {
             [GunshipSize.Large] = new(GunshipSize.Large, 1.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Large")),
         };
 
-        GameObject playerOBJ = Instantiate(GunshipPrefab);
+    }
+
+
+    private void Start() {
+        GameObject playerOBJ = Instantiate(prefabs["GunshipTriangle"]);
         player = playerOBJ.AddComponent<PlayerController>();
     }
 

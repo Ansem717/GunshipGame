@@ -473,8 +473,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1918764804}
-  - component: {fileID: 1918764803}
   - component: {fileID: 1918764805}
+  - component: {fileID: 1918764803}
   m_Layer: 0
   m_Name: SPAAAACE!
   m_TagString: Untagged
@@ -494,8 +494,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c7e416f01bef574394152349461416c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  starPrefab: {fileID: 6903034653066462981, guid: dc321d6b73a583142b95748e4a12f5d3, type: 3}
-  starCount: 50
+  starCount: 30
   activeStars: []
 --- !u!4 &1918764804
 Transform:
@@ -530,9 +529,6 @@ MonoBehaviour:
   actionListsDirty: 0
   PauseMenu: {fileID: 0}
   FrameBlockSize: 16
-  FrameBarPrefab: {fileID: 0}
-  GunshipPrefab: {fileID: 0}
-  CustomPhysicsPrefab: {fileID: 0}
   player: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

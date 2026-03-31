@@ -14,7 +14,6 @@ using UnityEngine;
 
 public class SpaceSystem : MonoBehaviour {
 
-    public GameObject starPrefab;
     public int starCount;
     public List<GameObject> activeStars;
 
@@ -54,7 +53,7 @@ public class SpaceSystem : MonoBehaviour {
 
         Vector3 pos = new Vector3(rx, ry, cam.nearClipPlane);
 
-        GameObject star = Instantiate(starPrefab, pos, Quaternion.identity);
+        GameObject star = Instantiate(MasterController.Singleton.prefabs["Star"], pos, Quaternion.identity);
         star.transform.localScale *= Random.value;
 
         if (star.TryGetComponent(out ActionList star_al)) {

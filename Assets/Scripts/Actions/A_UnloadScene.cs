@@ -29,11 +29,11 @@ public class A_UnloadScene : ActionInterface {
 
         if (unloading.isDone) {
             State = ActionState.Done;
-            Debug.Log("... DONE ! Unloading Scene ...");
+            //Debug.Log("... DONE ! Unloading Scene ...");
             MasterController.Singleton.actionListsDirty = true;
             return;
         }
-        Debug.Log("...Unloading Scene...");
+        //Debug.Log("...Unloading Scene...");
     }
 
     public override void Exit() { }
