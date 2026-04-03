@@ -39,6 +39,26 @@ public static class Helper {
                  bounds.min.y > max.y);
     }
 
+    /// <summary>
+    /// Returns true if a world position is outside the viewport expanded by a multiplier.
+    /// multiplier of 2 means 2x the screen size in each direction.
+    /// </summary>
+    public static bool IsOutsideExpandedViewport(Vector3 worldPosition, float multiplier = 2f, Camera cam = null) {
+        if (cam == null) cam = Camera.main;
+        if (cam == null) return false;
+
+        Vector3 viewportPos = cam.WorldToViewportPoint(worldPosition);
+
+        // Expand bounds: normally 0-1, with multiplier=2 becomes -0.5 to 1.5
+        float expand = (multiplier - 1f) / 2f;
+        float minBound = -expand;
+        float maxBound = 1f + expand;
+
+        return viewportPos.z <= 0f ||
+               viewportPos.x < minBound || viewportPos.x > maxBound ||
+               viewportPos.y < minBound || viewportPos.y > maxBound;
+    }
+
     public class ChildrenTree {
         public GameObject obj;
         public List<ChildrenTree> children = new List<ChildrenTree>();

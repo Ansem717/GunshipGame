@@ -15,24 +15,46 @@ using UnityEngine;
 public class SpaceSystem : MonoBehaviour {
 
     public int starCount;
-    public List<GameObject> activeStars;
+    public int rockCount;
+    private List<GameObject> activeStars;
+    private List<GameObject> activeRocks;
 
     void Start() {
         activeStars = new();
+        activeRocks = new();
 
         for (int i = 0; i < starCount; i++) {
-            activeStars.Add(BuildStar(true));
+            activeStars.Add(Build("Star", true));
+        }
+
+        for (int i = 0; i < rockCount; i++) {
+            activeRocks.Add(Build("Rock", true));
         }
 
     }
 
     void Update() {
+        // Clean up destroyed rocks (from bullets or other sources)
+        activeRocks.RemoveAll(r => r == null);
+
+        // Check for rocks that have drifted too far off-screen
+        for (int i = activeRocks.Count - 1; i >= 0; i--) {
+            if (Helper.IsOutsideExpandedViewport(activeRocks[i].transform.position, 2f)) {
+                Destroy(activeRocks[i]);
+                activeRocks.RemoveAt(i);
+            }
+        }
+
         if (activeStars.Count < starCount) {
-            activeStars.Add(BuildStar(false));
+            activeStars.Add(Build("Star", false));
+        }
+
+        if (activeRocks.Count < rockCount) {
+            activeRocks.Add(Build("Rock", false));
         }
     }
 
-    public GameObject BuildStar(bool onScreen) {
+    public GameObject Build(string type, bool onScreen) {
 
         //Assume onScreen is true.
 
@@ -53,12 +75,22 @@ public class SpaceSystem : MonoBehaviour {
 
         Vector3 pos = new Vector3(rx, ry, cam.nearClipPlane);
 
+        GameObject retobj = type switch {
+            "Star" => BuildStar(pos),
+            "Rock" => BuildRock(pos),
+            _ => throw new System.NotImplementedException(),
+        };
+
+        return retobj;
+    }
+
+    public GameObject BuildStar(Vector3 pos) {
         GameObject star = Instantiate(MasterController.Singleton.prefabs["Star"], pos, Quaternion.identity);
         star.transform.localScale *= Random.value;
 
         if (star.TryGetComponent(out ActionList star_al)) {
             star_al.PushFront(new A_Callback(
-                action: new A_StarController(), 
+                action: new A_StarController(),
                 callback: () => {
                     activeStars.Remove(star);
                     Destroy(star);
@@ -67,6 +99,16 @@ public class SpaceSystem : MonoBehaviour {
             ));
         }
         return star;
+    }
+
+    public GameObject BuildRock(Vector3 pos) {
+        GameObject rock = Instantiate(MasterController.Singleton.prefabs["Rock"], pos, Quaternion.identity);
+
+        //init with random size
+        List<Rock.RockSize> rockSizes = new() { Rock.RockSize.Small, Rock.RockSize.Medium, Rock.RockSize.Large };
+        rock.GetComponent<Rock>().Initialize(rockSizes[Random.Range(0, 3)]);
+
+        return rock;
     }
 
 }
