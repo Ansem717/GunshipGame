@@ -9,7 +9,7 @@ public class ChainGun : MonoBehaviour {
     [Tooltip("Cooldown speed multiplier (1 = same as windup)")]
     public float CooldownMultipler = 0.8f;
     [Min(0f)]
-    [Tooltip("Windup/cooldown accelerates at higher levels. Speed = 1 + (normalized² × Acceleration)")]
+    [Tooltip("Windup/cooldown accelerates at higher levels. Speed = 1 + (normalized^2 x Acceleration)")]
     public float Acceleration = 2f;
     
     [Header("Fire Rate")]
@@ -53,8 +53,7 @@ public class ChainGun : MonoBehaviour {
     private GameObject IndicatorPrefab;
     private GameObject ConePrefab;
 
-    // Cached calculations
-    private Vector3 NosePosition => transform.parent.position + (transform.parent.up * 0.4f);
+    private static bool RadialVisualShowing; //A static bool used to prevent multiple chain guns from showing the radial visual
 
     void Start() {
         IsShooting = false;
@@ -62,17 +61,37 @@ public class ChainGun : MonoBehaviour {
         shipPhysics = transform.parent.GetComponentInChildren<CustomPhysics>();
         IndicatorPrefab = MasterController.Singleton.prefabs["ChainGunIndicator"];
         ConePrefab = MasterController.Singleton.prefabs["ChainGunCone"];
+        RadialVisualShowing = false;
+    }
+
+    public void LoadData(ChainGun_SO chainGunData) {
+        WindupTimeToMax = chainGunData.WindupTimeToMax;
+        CooldownMultipler = chainGunData.CooldownMultipler;
+        Acceleration = chainGunData.Acceleration;
+        MinimumFireRate = chainGunData.MinimumFireRate;
+        MaximumFireRate = chainGunData.MaximumFireRate;
+        BulletSpeed = chainGunData.BulletSpeed;
+        BulletLifetime = chainGunData.BulletLifetime;
+        MinDeviation = chainGunData.MinDeviation;
+        MaxDeviation = chainGunData.MaxDeviation;
+        indicatorOffset = chainGunData.indicatorOffset;
+        coneFadeDuration = chainGunData.coneFadeDuration;
     }
 
     void Update() {
         float windupNormalized = UpdateWindup();
         float currentDeviation = Mathf.Lerp(MinDeviation, MaxDeviation, windupNormalized);
 
-        UpdateVisuals(windupNormalized, currentDeviation);
+        if (GetComponentInParent<PlayerController>()) UpdateVisuals(windupNormalized, currentDeviation); //if this is the player, update the gunship visuals
         
         if (windupNormalized > 0) {
             UpdateFiring(windupNormalized, currentDeviation);
         }
+    }
+
+    private void OnDestroy() {
+        if (indicatorInstance != null) Destroy(indicatorInstance);
+        if (coneInstance != null) Destroy(coneInstance);
     }
 
     float UpdateWindup() {
@@ -90,19 +109,22 @@ public class ChainGun : MonoBehaviour {
     }
 
     void UpdateVisuals(float windupNormalized, float currentDeviation) {
+
         bool shouldShowVisuals = windupNormalized > 0;
 
         // Indicator lifecycle (instant)
         if (shouldShowVisuals) {
-            if (indicatorInstance == null && IndicatorPrefab != null) {
+            if (indicatorInstance == null && IndicatorPrefab != null && !RadialVisualShowing) {
                 indicatorInstance = Instantiate(IndicatorPrefab);
                 indicator = indicatorInstance.GetComponent<ChainGunIndicatorScript>();
+                RadialVisualShowing = true;
             }
         }
         if (!shouldShowVisuals && indicatorInstance != null) {
             Destroy(indicatorInstance);
             indicatorInstance = null;
             indicator = null;
+            RadialVisualShowing = false;
         }
 
         // Cone lifecycle (with fade)
@@ -137,7 +159,7 @@ public class ChainGun : MonoBehaviour {
             indicator.SetWindup(windupNormalized);
         }
         if (cone != null) {
-            coneInstance.transform.position = NosePosition;
+            coneInstance.transform.position = transform.position; //the cone spawns at the position of the chaingun
             coneInstance.transform.rotation = transform.parent.rotation;
             cone.SetDeviation(currentDeviation);
             cone.SetOpacity(coneOpacity);
@@ -156,7 +178,8 @@ public class ChainGun : MonoBehaviour {
     }
 
     void SpawnBullet(float deviation, bool hasTrail) {
-        GameObject bullet = Instantiate(MasterController.Singleton.prefabs["Bullet"], NosePosition, transform.parent.rotation);
+        //instantiate the bullet  -  - -  -  -  -  -  -  -  -  -  -  -  -  -  -  - At the position of Chaingun -  -  -
+        GameObject bullet = Instantiate(MasterController.Singleton.prefabs["Bullet"], transform.position, transform.parent.rotation);
         
         if (bullet.TryGetComponent(out ActionList bal)) {
             float randomAngle = Random.Range(-deviation, deviation);

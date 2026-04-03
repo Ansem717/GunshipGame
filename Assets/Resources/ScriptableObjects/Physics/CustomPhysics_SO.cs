@@ -1,7 +1,9 @@
+using System;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "CustomPhysics_SO", menuName = "Custom/Phyiscs")]
 public class CustomPhysics_SO : ScriptableObject {
+
     [Header("Physical Properties")]
     public float drag;
     public float angularDrag;

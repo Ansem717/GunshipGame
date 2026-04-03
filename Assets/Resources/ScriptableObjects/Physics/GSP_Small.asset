@@ -18,6 +18,6 @@ MonoBehaviour:
   brakeAcceleration: 8
   maxVelocity: 8
   jerkStrength: 1
-  maxRotationalAcceleration: 720
+  maxRotationalAcceleration: 480
   maxRotationalVelocity: 120
   rotationalJerkStrength: 5

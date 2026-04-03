@@ -1,6 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//Create a derived category of Scriptable Objects for typeof tracking weapons
+public class WeaponScriptableObject : ScriptableObject { 
+
+}
+
 public static class Helper {
     /// <summary>
     /// Returns true if a world position is inside the specified camera's viewport.

@@ -62,12 +62,24 @@ public class MasterController : MonoBehaviour {
     public class GunshipData {
         public GunshipSize size;
         public float scale;
-        public CustomPhysics_SO physicsData;
+        private List<ScriptableObject> dataObjs;
 
-        public GunshipData(GunshipSize size, float scale, CustomPhysics_SO physicsData) {
+        public GunshipData(GunshipSize size, float scale, List<ScriptableObject> dataObjs) {
             this.size = size;
             this.scale = scale;
-            this.physicsData = physicsData;
+            this.dataObjs = dataObjs;
+        }
+
+        public List<T> GetData<T>() {
+            return dataObjs.OfType<T>().ToList();
+        }
+
+        public override string ToString() {
+            string r = $"Size: {size}, Scale: {scale}, Scripts: [ ";
+            foreach (ScriptableObject so in dataObjs) {
+                r += $"{so}, ";
+            }
+            return r + "]";
         }
     }
 
@@ -115,7 +127,7 @@ public class MasterController : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
 
         ///////////////////////
-        
+
         actionLists = new();
         actionListsDirty = true;
         PauseMenu = null;
@@ -133,9 +145,19 @@ public class MasterController : MonoBehaviour {
         }
 
         GunshipDatas = new() {
-            [GunshipSize.Small] = new(GunshipSize.Small, 0.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Small")),
-            [GunshipSize.Medium] = new(GunshipSize.Medium, 1.3f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Medium")),
-            [GunshipSize.Large] = new(GunshipSize.Large, 1.8f, Resources.Load<CustomPhysics_SO>("ScriptableObjects/Gunships/GSP_Large")),
+            [GunshipSize.Small] = new(GunshipSize.Small, 0.8f, new() {
+                Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Small"),
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Small")
+            }),
+            [GunshipSize.Medium] = new(GunshipSize.Medium, 1.3f, new() {
+                Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Medium"),
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Medium")
+            }),
+            [GunshipSize.Large] = new(GunshipSize.Large, 1.8f, new() {
+                Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Large"),
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large"),
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large")
+            }),
         };
 
     }
@@ -143,6 +165,8 @@ public class MasterController : MonoBehaviour {
 
     private void Start() {
         GameObject playerOBJ = Instantiate(prefabs["GunshipTriangle"]);
+        playerOBJ.tag = "Player";
+        playerOBJ.name = "Player";
         player = playerOBJ.AddComponent<PlayerController>();
     }
 
@@ -152,7 +176,7 @@ public class MasterController : MonoBehaviour {
         if (actionListsDirty) {
             actionLists = FindObjectsByType<ActionList>(FindObjectsSortMode.None).ToList();
             actionListsDirty = false;
-            Debug.Log($"ALDirty, reloaded {actionLists.Count} lists.");
+            //Debug.Log($"ALDirty, reloaded {actionLists.Count} lists.");
             dirtyGTM = -999; //flag the GTM as dirty so all lists get updated.
         }
 

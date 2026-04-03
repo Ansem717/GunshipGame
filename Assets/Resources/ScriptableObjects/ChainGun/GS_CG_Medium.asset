@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe6fa618433c11e47a10c13dd4422ee4, type: 3}
+  m_Name: GS_CG_Medium
+  m_EditorClassIdentifier: 
+  WindupTimeToMax: 24
+  CooldownMultipler: 1.25
+  Acceleration: 18
+  MinimumFireRate: 0.67
+  MaximumFireRate: 24
+  BulletSpeed: 12
+  BulletLifetime: 2
+  MinDeviation: 3
+  MaxDeviation: 12
+  indicatorOffset: {x: 0, y: -0.6, z: 0}
+  coneFadeDuration: 0.4
