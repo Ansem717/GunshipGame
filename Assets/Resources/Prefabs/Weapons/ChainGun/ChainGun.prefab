@@ -41,17 +41,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 8289380458553584621}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9644085d0098774f9c125628cdde456, type: 3}
+  m_Script: {fileID: 11500000, guid: aab58165238dac348a76c7bf682aaaa8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WindupTimeToMax: 20
-  CooldownMultipler: 1.25
-  Acceleration: 16
-  MinimumFireRate: 1
-  MaximumFireRate: 16
-  BulletSpeed: 10
-  BulletLifetime: 2
-  MinDeviation: 4
-  MaxDeviation: 16
-  indicatorOffset: {x: 0, y: -0.5, z: 0}
-  coneFadeDuration: 0.5
+  WindupTimeToMax: 1
+  CooldownMultipler: 0.8
+  Acceleration: 2
+  MinimumFireRate: 0.5
+  MaximumFireRate: 10
+  BulletSpeed: 0
+  BulletLifetime: 0
+  MinDeviation: 2
+  MaxDeviation: 10
+  indicatorOffset: {x: 0, y: 0, z: 0}
+  coneFadeDuration: 0.15

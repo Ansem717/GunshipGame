@@ -106,9 +106,10 @@ public class ActionList : MonoBehaviour {
         if (TryGetAction(ai.name, out ActionInterface existing)) {
             existing.markedForDelete = true; //only one action with the same name can exist in the list. 
         }
-        ai.SetOwner(this);
-        //Debug.Log($"{gameObject.name} Action added: {ai.name}");
-        pendingActions.Add((pos, ai));
+        if (ai.SetOwner(this)) {
+            //Debug.Log($"{gameObject.name} Action added: {ai.name}");
+            pendingActions.Add((pos, ai));
+        }
     }
 
     public void Clear() {

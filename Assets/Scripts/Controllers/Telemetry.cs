@@ -61,17 +61,17 @@ public class Telemetry : MonoBehaviour {
     private List<TelemetryCardEntry> cardEntries;
 
     private class TelemetryTrickEntry : TelemetryEntry {
-        public int size;
+        public int Size;
         public int playerID;
 
-        public TelemetryTrickEntry(int size, int playerID) {
+        public TelemetryTrickEntry(int Size, int playerID) {
             frameStamp = Time.frameCount;
-            this.size = size;
+            this.Size = Size;
             this.playerID = playerID;
             name = "Trick";
         }
 
-        public override string ToString() => $"{frameStamp},{name},{playerID},{size}";
+        public override string ToString() => $"{frameStamp},{name},{playerID},{Size}";
     }
 
     private List<TelemetryTrickEntry> trickEntries;
@@ -160,7 +160,7 @@ public class Telemetry : MonoBehaviour {
     /////////////////
 
     //public void RecordCardEntry(string name, int playerID, bool didWin, int turn) => cardEntries.Add(new TelemetryCardEntry(name, playerID, didWin));
-    //public void RecordTrickEntry(int size, int playerID, int turn) => trickEntries.Add(new TelemetryTrickEntry(size, playerID, turn));
+    //public void RecordTrickEntry(int Size, int playerID, int turn) => trickEntries.Add(new TelemetryTrickEntry(Size, playerID, turn));
     //public void RecordMenuEntry(TelemetryMenuOption opt) => menuEntries.Add(new TelemetryMenuEntry(opt));
     public void RecordPerformanceEntry(int blockSize, int minFrame, float meanFrame, int midFrame) => performanceEntries.Add(new TelemetryPerformanceEntry(Time.realtimeSinceStartup, blockSize, minFrame, meanFrame, midFrame));
 

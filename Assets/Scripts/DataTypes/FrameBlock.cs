@@ -54,7 +54,7 @@ public class FrameBlock {
 
 
         if (tElapsed >= Size) {
-            //wait "size" seconds for a full block and record telemetry
+            //wait "Size" seconds for a full block and record telemetry
             Telemetry.Instance.RecordPerformanceEntry(Size, Worst(), Mean(), Median());
             tElapsed = 0;
         }

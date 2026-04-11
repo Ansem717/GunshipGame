@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WindupTimeToMax: 40
   CooldownMultipler: 1.5
-  Acceleration: 30
+  Acceleration: 25
   MinimumFireRate: 0.33
   MaximumFireRate: 32
   BulletSpeed: 9

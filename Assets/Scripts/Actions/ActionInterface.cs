@@ -60,9 +60,13 @@ public abstract class ActionInterface {
     /// <summary>
     /// A function to wrap owner setting for handling child actions.
     /// </summary>
-    public virtual void SetOwner(ActionList actionList) {
+    public virtual bool SetOwner(ActionList actionList) {
         owner = actionList;
+        if (owner == null || owner.gameObject == null) {
+            return false;
+        }
         objRef = owner.gameObject;
+        return true;
     }
 
     /// <summary>

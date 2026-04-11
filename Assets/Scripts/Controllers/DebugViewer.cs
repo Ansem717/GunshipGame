@@ -57,7 +57,7 @@ public class DebugViewer : MonoBehaviour {
     void Update() {
 
         // UPDATE ACTIONS TEXT
-        string actext = "<size=36><align=center><b>Actions</b></align></size>\n";
+        string actext = "<Size=36><align=center><b>Actions</b></align></Size>\n";
 
         foreach (ActionList aList in MasterController.Singleton.actionLists.OrderBy(al => al.DebugSortOrder)) {
             if (aList == null || aList.gameObject == null) {
@@ -78,7 +78,7 @@ public class DebugViewer : MonoBehaviour {
         FrameBlock block = MasterController.Singleton.mFrameBlock;
         if (block.frames.Count == 0) return;
 
-        performanceText.text = $"<size=36><align=center><b>Frame Rates</b></align></size>\r\n" +
+        performanceText.text = $"<Size=36><align=center><b>Frame Rates</b></align></Size>\r\n" +
             $"Worst . . . {block.Worst()}\r\n" +
             $"Median . . . {block.Median()}\r\n" +
             $"Mean . . . {block.Mean():F1}";

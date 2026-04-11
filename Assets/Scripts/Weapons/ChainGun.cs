@@ -55,6 +55,11 @@ public class ChainGun : MonoBehaviour {
 
     private static bool RadialVisualShowing; //A static bool used to prevent multiple chain guns from showing the radial visual
 
+    /// <summary>
+    /// Returns windup progress normalized (0-1).
+    /// </summary>
+    public float WindupNormalized => Mathf.Clamp01(WindupElapsed / WindupTimeToMax);
+
     void Start() {
         IsShooting = false;
         WindupElapsed = 0;
@@ -79,10 +84,11 @@ public class ChainGun : MonoBehaviour {
     }
 
     void Update() {
+        if (MasterController.Singleton.Paused) return;
         float windupNormalized = UpdateWindup();
         float currentDeviation = Mathf.Lerp(MinDeviation, MaxDeviation, windupNormalized);
 
-        if (GetComponentInParent<PlayerController>()) UpdateVisuals(windupNormalized, currentDeviation); //if this is the player, update the gunship visuals
+        if (transform.parent.CompareTag("Player")) UpdateVisuals(windupNormalized, currentDeviation); //if this is the player, update the gunship visuals
         
         if (windupNormalized > 0) {
             UpdateFiring(windupNormalized, currentDeviation);
@@ -178,8 +184,9 @@ public class ChainGun : MonoBehaviour {
     }
 
     void SpawnBullet(float deviation, bool hasTrail) {
-        //instantiate the bullet  -  - -  -  -  -  -  -  -  -  -  -  -  -  -  -  - At the position of Chaingun -  -  -
-        GameObject bullet = Instantiate(MasterController.Singleton.prefabs["Bullet"], transform.position, transform.parent.rotation);
+
+        string bulletType = (transform.parent.tag == "Player") ? "PlayerBullet" : "EnemyBullet";
+        GameObject bullet = Instantiate(MasterController.Singleton.prefabs[bulletType], transform.position, transform.parent.rotation);
         
         if (bullet.TryGetComponent(out ActionList bal)) {
             float randomAngle = Random.Range(-deviation, deviation);

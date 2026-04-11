@@ -50,15 +50,20 @@ public class Rock : MonoBehaviour {
     private static int nextSortingOrder = 0; // Static counter for unique sorting
     private bool initialized;
     private int currentHealth;
-    private float rotationSpeed;
-    private Vector2 velocity;
     private int mySortingOrder;
+
+    // Physics component (child object)
+    private CustomPhysics physics;
 
     // Visual components
     private MeshFilter meshFilter;
     private MeshRenderer meshRenderer;
     private PolygonCollider2D polyCollider;
     private LineRenderer lineRenderer;
+
+    // Public Properties
+    public float HealthPercentage => (float)currentHealth / GetHealthForSize(size);
+    public int CurrentHealth => currentHealth;
 
     void Awake() {
         // Ensure we have necessary components
@@ -74,22 +79,15 @@ public class Rock : MonoBehaviour {
         lineRenderer = GetComponent<LineRenderer>();
         if (lineRenderer == null) lineRenderer = gameObject.AddComponent<LineRenderer>();
 
-        // Rigidbody2D required for trigger detection, but Kinematic won't interfere with manual movement
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
-        if (rb == null) {
-            rb = gameObject.AddComponent<Rigidbody2D>();
-            rb.gravityScale = 0f;
-            rb.bodyType = RigidbodyType2D.Kinematic;
-        }
+        // Get CustomPhysics from child object
+        physics = GetComponentInChildren<CustomPhysics>();
+
     }
 
     void Start() {
         if (!initialized) Initialize(size);
     }
 
-    /// <summary>
-    /// Initialize the rock with a specific size. Call this when spawning programmatically.
-    /// </summary>
     public void Initialize(RockSize rockSize, Vector2? initialVelocity = null) {
         initialized = true;
         size = rockSize;
@@ -99,7 +97,22 @@ public class Rock : MonoBehaviour {
         mySortingOrder = nextSortingOrder;
         nextSortingOrder += 2; // Reserve 2 slots: one for fill, one for outline
 
-        // Set up random movement
+        // Set up movement via CustomPhysics
+        if (physics != null) {
+            // Load physics data for this rock Size
+            string physicsPath = size switch {
+                RockSize.Large => "ScriptableObjects/Physics/RockPhysics_Large",
+                RockSize.Medium => "ScriptableObjects/Physics/RockPhysics_Medium",
+                RockSize.Small => "ScriptableObjects/Physics/RockPhysics_Small",
+                _ => "ScriptableObjects/Physics/RockPhysics_Small"
+            };
+            CustomPhysics_SO physicsData = Resources.Load<CustomPhysics_SO>(physicsPath);
+            if (physicsData != null) {
+                physics.LoadData(physicsData);
+            }
+        }
+
+        Vector2 velocity;
         if (initialVelocity.HasValue) {
             velocity = initialVelocity.Value;
         } else {
@@ -107,7 +120,12 @@ public class Rock : MonoBehaviour {
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
             velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * speed;
         }
-        rotationSpeed = Random.Range(minRotationSpeed, maxRotationSpeed) * (Random.value > 0.5f ? 1f : -1f);
+        float rotationSpeed = Random.Range(minRotationSpeed, maxRotationSpeed) * (Random.value > 0.5f ? 1f : -1f);
+
+        if (physics != null) {
+            physics.ApplyImpulse(velocity);
+            physics.ApplyRotationalImpulse(rotationSpeed);
+        }
 
         // Generate the visual mesh
         GenerateAsteroidMesh();
@@ -122,21 +140,6 @@ public class Rock : MonoBehaviour {
         gameObject.tag = "Rock";
     }
 
-    void Update() {
-        if (MasterController.Singleton.Paused) return;
-
-        float dt = Time.deltaTime;
-
-        // Apply movement
-        transform.position += (Vector3)velocity * dt;
-
-        // Apply rotation
-        transform.Rotate(0, 0, rotationSpeed * dt);
-    }
-
-    /// <summary>
-    /// Generate a procedural asteroid mesh with irregular edges.
-    /// </summary>
     private void GenerateAsteroidMesh() {
         float baseRadius = GetRadiusForSize(size);
         Vector2[] points = new Vector2[vertexCount];
@@ -200,9 +203,6 @@ public class Rock : MonoBehaviour {
         lineRenderer.SetPosition(vertexCount, vertices[1]); // Close the loop
     }
 
-    /// <summary>
-    /// Called when a bullet hits this rock.
-    /// </summary>
     public void TakeDamage(int damage = 1) {
         currentHealth -= damage;
 
@@ -211,17 +211,11 @@ public class Rock : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Handle rock destruction and spawn child rocks.
-    /// </summary>
     private void DestroyRock() {
         SpawnChildRocks();
         Destroy(gameObject);
     }
 
-    /// <summary>
-    /// Spawn child rocks based on the current rock size.
-    /// </summary>
     private void SpawnChildRocks() {
         switch (size) {
             case RockSize.Large:
@@ -236,10 +230,6 @@ public class Rock : MonoBehaviour {
         }
     }
 
-    /// <summary>
-    /// Large rocks spawn 6 "value" worth of rocks.
-    /// Medium = 2 value, Small = 1 value.
-    /// </summary>
     private void SpawnLargeRockChildren() {
         int remainingValue = 6;
         List<RockSize> toSpawn = new List<RockSize>();
@@ -260,9 +250,6 @@ public class Rock : MonoBehaviour {
         SpawnRocksFromList(toSpawn);
     }
 
-    /// <summary>
-    /// Medium rocks spawn 0-3 small rocks.
-    /// </summary>
     private void SpawnMediumRockChildren() {
         int count = Random.Range(0, 4); // 0, 1, 2, or 3
         List<RockSize> toSpawn = new List<RockSize>();
@@ -274,12 +261,11 @@ public class Rock : MonoBehaviour {
         SpawnRocksFromList(toSpawn);
     }
 
-    /// <summary>
-    /// Spawn rocks from a list, distributing them in different directions.
-    /// </summary>
     private void SpawnRocksFromList(List<RockSize> rocks) {
         int count = rocks.Count;
         if (count == 0) return;
+
+        GameObject rockPrefab = MasterController.Singleton.prefabs["Rock"];
 
         for (int i = 0; i < count; i++) {
             // Calculate spawn angle to spread rocks evenly
@@ -289,11 +275,9 @@ public class Rock : MonoBehaviour {
             // Spawn position offset from center
             Vector3 spawnPos = transform.position + (Vector3)(direction * spawnOffset);
 
-            // Create new rock
-            GameObject newRockObj = new GameObject($"Rock_{rocks[i]}");
-            newRockObj.transform.position = spawnPos;
-
-            Rock newRock = newRockObj.AddComponent<Rock>();
+            // Instantiate from prefab
+            GameObject newRockObj = Instantiate(rockPrefab, spawnPos, Quaternion.identity);
+            Rock newRock = newRockObj.GetComponent<Rock>();
 
             // Copy settings
             newRock.LargeHealth = LargeHealth;
@@ -311,25 +295,20 @@ public class Rock : MonoBehaviour {
             newRock.spawnOffset = spawnOffset;
 
             // Calculate velocity - inherit some parent velocity plus outward push
-            Vector2 inheritedVelocity = velocity * 0.5f;
+            Vector2 currentVelocity = physics != null ? (Vector2)physics.ExternalVelocity : Vector2.zero;
+            Vector2 inheritedVelocity = currentVelocity * 0.5f;
             Vector2 outwardVelocity = direction * Random.Range(minVelocity, maxVelocity);
             newRock.Initialize(rocks[i], inheritedVelocity + outwardVelocity);
         }
     }
 
-    /// <summary>
-    /// Handle trigger collision with bullets.
-    /// </summary>
     private void OnTriggerEnter2D(Collider2D other) {
-        if (other.CompareTag("Bullet")) {
+        if (other.CompareTag("PlayerBullet") || other.CompareTag("EnemyBullet")) {
             TakeDamage(1);
             Destroy(other.gameObject); // Destroy the bullet on impact
         }
     }
 
-    /// <summary>
-    /// Get health value for a given rock size.
-    /// </summary>
     private int GetHealthForSize(RockSize rockSize) {
         return rockSize switch {
             RockSize.Large => LargeHealth,
@@ -339,9 +318,6 @@ public class Rock : MonoBehaviour {
         };
     }
 
-    /// <summary>
-    /// Get base radius for a given rock size.
-    /// </summary>
     private float GetRadiusForSize(RockSize rockSize) {
         return rockSize switch {
             RockSize.Large => LargeRadius,
@@ -349,19 +325,5 @@ public class Rock : MonoBehaviour {
             RockSize.Small => SmallRadius,
             _ => SmallRadius
         };
-    }
-
-    /// <summary>
-    /// Get remaining health percentage (0-1).
-    /// </summary>
-    public float GetHealthPercentage() {
-        return (float)currentHealth / GetHealthForSize(size);
-    }
-
-    /// <summary>
-    /// Get current health.
-    /// </summary>
-    public int GetCurrentHealth() {
-        return currentHealth;
     }
 }

@@ -4,7 +4,7 @@
 // email:	andy.malik@digipen.edu
 // term:	Spring 2026
 //
-// brief:	An action to manipulate the scale of the object.
+// brief:	An action to manipulate the Scale of the object.
 //
 // Copyright (c) 2026 DigiPen (USA) Corporation
 //---------------------------------------------------------

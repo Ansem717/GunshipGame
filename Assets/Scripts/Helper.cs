@@ -41,7 +41,7 @@ public static class Helper {
 
     /// <summary>
     /// Returns true if a world position is outside the viewport expanded by a multiplier.
-    /// multiplier of 2 means 2x the screen size in each direction.
+    /// multiplier of 2 means 2x the screen Size in each direction.
     /// </summary>
     public static bool IsOutsideExpandedViewport(Vector3 worldPosition, float multiplier = 2f, Camera cam = null) {
         if (cam == null) cam = Camera.main;

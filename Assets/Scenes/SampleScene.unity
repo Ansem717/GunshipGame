@@ -169,7 +169,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -293,7 +293,7 @@ MonoBehaviour:
   m_Intensity: 1
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
-  m_ApplyToSortingLayers: 00000000
+  m_ApplyToSortingLayers: 00000000419ef4dd
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
   m_LightOrder: 0
@@ -494,8 +494,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c7e416f01bef574394152349461416c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  starCount: 2
-  rockCount: 5
+  starCount: 24
+  rockCount: 6
+  MaxEnemiesOnScreen: 4
+  EnemySpawnCooldown: 4
 --- !u!4 &1918764804
 Transform:
   m_ObjectHideFlags: 0

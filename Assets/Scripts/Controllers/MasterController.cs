@@ -60,13 +60,15 @@ public class MasterController : MonoBehaviour {
 
     public enum GunshipSize { Small, Medium, Large };
     public class GunshipData {
-        public GunshipSize size;
-        public float scale;
+        public GunshipSize Size;
+        public float MaxHealth;
+        public float Scale;
         private List<ScriptableObject> dataObjs;
 
-        public GunshipData(GunshipSize size, float scale, List<ScriptableObject> dataObjs) {
-            this.size = size;
-            this.scale = scale;
+        public GunshipData(GunshipSize Size, float MaxHealth, float Scale, List<ScriptableObject> dataObjs) {
+            this.Size = Size;
+            this.MaxHealth = MaxHealth;
+            this.Scale = Scale;
             this.dataObjs = dataObjs;
         }
 
@@ -75,7 +77,7 @@ public class MasterController : MonoBehaviour {
         }
 
         public override string ToString() {
-            string r = $"Size: {size}, Scale: {scale}, Scripts: [ ";
+            string r = $"Size: {Size}, Scale: {Scale}, Scripts: [ ";
             foreach (ScriptableObject so in dataObjs) {
                 r += $"{so}, ";
             }
@@ -85,7 +87,7 @@ public class MasterController : MonoBehaviour {
 
     public Dictionary<GunshipSize, GunshipData> GunshipDatas;
 
-    public PlayerController player;
+    public GunshipController player;
 
     private bool _paused;
     public bool Paused {
@@ -145,15 +147,15 @@ public class MasterController : MonoBehaviour {
         }
 
         GunshipDatas = new() {
-            [GunshipSize.Small] = new(GunshipSize.Small, 0.8f, new() {
+            [GunshipSize.Small] = new(GunshipSize.Small, 32, 0.8f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Small"),
                 Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Small")
             }),
-            [GunshipSize.Medium] = new(GunshipSize.Medium, 1.3f, new() {
+            [GunshipSize.Medium] = new(GunshipSize.Medium, 64, 1.3f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Medium"),
                 Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Medium")
             }),
-            [GunshipSize.Large] = new(GunshipSize.Large, 1.8f, new() {
+            [GunshipSize.Large] = new(GunshipSize.Large, 128, 1.8f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Large"),
                 Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large"),
                 Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large")
@@ -167,7 +169,7 @@ public class MasterController : MonoBehaviour {
         GameObject playerOBJ = Instantiate(prefabs["GunshipTriangle"]);
         playerOBJ.tag = "Player";
         playerOBJ.name = "Player";
-        player = playerOBJ.AddComponent<PlayerController>();
+        player = playerOBJ.AddComponent<GunshipController>();
     }
 
     private void Update() {
