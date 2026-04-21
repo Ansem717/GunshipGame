@@ -16,8 +16,8 @@ MonoBehaviour:
   angularDrag: 1
   maximumAcceleration: 4
   brakeAcceleration: 8
-  maxVelocity: 8
-  jerkStrength: 1
+  maxVelocity: 5
+  jerkStrength: 1.5
   maxRotationalAcceleration: 180
   maxRotationalVelocity: 120
   rotationalJerkStrength: 5

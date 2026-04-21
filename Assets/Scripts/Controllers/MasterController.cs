@@ -88,6 +88,7 @@ public class MasterController : MonoBehaviour {
     public Dictionary<GunshipSize, GunshipData> GunshipDatas;
 
     public GunshipController player;
+    public Transform boss;
 
     private bool _paused;
     public bool Paused {
@@ -149,16 +150,19 @@ public class MasterController : MonoBehaviour {
         GunshipDatas = new() {
             [GunshipSize.Small] = new(GunshipSize.Small, 32, 0.8f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Small"),
-                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Small")
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Small"),
+                Resources.Load<Missle_SO>("ScriptableObjects/Missle/GS_Missle_Small")
             }),
             [GunshipSize.Medium] = new(GunshipSize.Medium, 64, 1.3f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Medium"),
-                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Medium")
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Medium"),
+                Resources.Load<Missle_SO>("ScriptableObjects/Missle/GS_Missle_Medium")
             }),
             [GunshipSize.Large] = new(GunshipSize.Large, 128, 1.8f, new() {
                 Resources.Load<CustomPhysics_SO>("ScriptableObjects/Physics/GSP_Large"),
                 Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large"),
-                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large")
+                Resources.Load<ChainGun_SO>("ScriptableObjects/Chaingun/GS_CG_Large"),
+                Resources.Load<Missle_SO>("ScriptableObjects/Missle/GS_Missle_Large")
             }),
         };
 
@@ -170,6 +174,17 @@ public class MasterController : MonoBehaviour {
         playerOBJ.tag = "Player";
         playerOBJ.name = "Player";
         player = playerOBJ.AddComponent<GunshipController>();
+        AttachAutoplayAction();
+
+        if (player.TryGetComponent(out ActionList pal)) {
+            pal.PushFront(new A_StaticBlocker(SBFlag.AutoplayBlocker));
+        }
+    }
+
+    private void AttachAutoplayAction() {
+        if (player.TryGetComponent(out ActionList pal)) {
+            pal.PushBack(new A_Callback(action: new A_SeekTarget(boss), callback: AttachAutoplayAction));
+        } else Debug.LogError("Could not find ActionList on Player");
     }
 
     private void Update() {
@@ -210,7 +225,15 @@ public class MasterController : MonoBehaviour {
 
     public void SetAutoplay(bool state) {
         Autoplay = state;
-        A_StaticBlocker.CurrentFlag = SBFlag.PlayerTurnComplete; //When autoplay is active, a SB_PTC is created, so this just clears out any PTCs.
+
+        if (player.TryGetComponent(out ActionList pal)) {
+            if (Autoplay) {
+                A_StaticBlocker.CurrentFlag = SBFlag.AutoplayBlocker;
+            } else {
+                pal.PushFront(new A_StaticBlocker(SBFlag.AutoplayBlocker));
+            }
+        }
+
     }
 
     public void TogglePause() => Paused = !Paused;

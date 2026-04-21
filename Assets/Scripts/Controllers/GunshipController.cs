@@ -30,32 +30,34 @@ public class GunshipController : MonoBehaviour {
 
     private List<InputEntry> InputKeys;
 
-    public Dictionary<Type, List<MonoBehaviour>> scripts;
+    public Dictionary<Type, List<MonoBehaviour>> components;
 
-    // Base orthographic Size when stationary
-    public float baseOrthoSize = 5f;
-    // Additional zoom out at max velocity
-    public float velocityZoomOut = 2f;
-    // Additional zoom out at max chaingun warmup
-    public float chaingunZoomOut = 0.5f;
-    // How far ahead the camera leads (in seconds of travel
-    public float cameraLeadTime = 0.6f;
-    // How smoothly the camera follows/zooms (lower = smoother)
-    public float cameraSmoothSpeed = 6f;
+    // CAMERAS
+    public float baseOrthoSize = 5f; // Base orthographic Size when stationary
+    public float velocityZoomOut = 2f; // Additional zoom out at max velocity
+    public float chaingunZoomOut = 0.5f; // Additional zoom out at max chaingun warmup
+    public float cameraLeadTime = 0.6f; // How far ahead the camera leads (in seconds of travel
+    public float cameraSmoothSpeed = 6f; // How smoothly the camera follows/zooms (lower = smoother)
 
+    // OTHER DATAS
     public float MaxHealth = 100f;
     public float CurrentHealth;
     private bool isDying = false;
 
+    public float PseudoMass; //ship scale
+
+    // PHYSICS MANAGEMENT
+    private CustomPhysics physics => components[typeof(CustomPhysics)][0] as CustomPhysics;
+    private bool hasPhysics => components.ContainsKey(typeof(CustomPhysics)) && components[typeof(CustomPhysics)].Count > 0;
+
     void Start() {
-        scripts = new();
+        components = new();
         InputKeys = new();
 
         CurrentHealth = MaxHealth;
 
         //Load small gunship by default
         LoadGunship(MasterController.GunshipSize.Small);
-
     }
 
     public void LoadGunship(MasterController.GunshipSize size) {
@@ -72,6 +74,7 @@ public class GunshipController : MonoBehaviour {
 
         //Since data exists, load in the Scale
         transform.localScale = MasterController.Singleton.prefabs["GunshipTriangle"].transform.localScale * data.Scale;
+        PseudoMass = data.Scale;
 
         //Update health with accurate ratio
         float healthFrac = CurrentHealth / MaxHealth;
@@ -80,7 +83,7 @@ public class GunshipController : MonoBehaviour {
 
         foreach (CustomPhysics_SO physicsData in data.GetData<CustomPhysics_SO>()) {
             //!! Guard: If the script contains this key, we already added in a physics, so why are we still here?
-            if (scripts.ContainsKey(typeof(CustomPhysics))) {
+            if (hasPhysics) {
                 Debug.LogError("GunshipController ERROR: Multiple instances of Physics_SO found.");
                 break;
             }
@@ -90,7 +93,7 @@ public class GunshipController : MonoBehaviour {
 
             physics.LoadData(physicsData); //load custom SO data
 
-            scripts[typeof(CustomPhysics)] = new() { physics }; //track it in the dict; we're guaranteed to only have one so this shorthand works
+            components[typeof(CustomPhysics)] = new() { physics }; //track it in the dict; we're guaranteed to only have one so this shorthand works
 
             if (gameObject.CompareTag("Player")) {
                 InputKeys.Add(new InputEntry(
@@ -111,48 +114,68 @@ public class GunshipController : MonoBehaviour {
         }
 
         List<WeaponScriptableObject> weapons = data.GetData<WeaponScriptableObject>();
+        // Separate chain guns and missile launchers
+        List<ChainGun_SO> chainGuns = new();
+        List<Missle_SO> missleLaunchers = new();
+        foreach (var w in weapons) {
+            if (w is ChainGun_SO cg) chainGuns.Add(cg);
+            else if (w is Missle_SO ml) missleLaunchers.Add(ml);
+        }
 
-        for (int i = 0; i < weapons.Count; i++) {
-            GameObject obj = null;
-            if (weapons[i].GetType() == typeof(ChainGun_SO)) {
-                obj = Instantiate(MasterController.Singleton.prefabs["ChainGun"], transform); //attach chain gun
-                ChainGun chainGunScript = obj.GetComponent<ChainGun>(); //capture script
-                chainGunScript.LoadData(weapons[i] as ChainGun_SO); //load data
-
-                scripts.TryAdd(typeof(ChainGun), new()); //If the key doesn't exist, add the key with a new instantiated list.
-                scripts[typeof(ChainGun)].Add(chainGunScript); //track in dict
-
-                if (gameObject.CompareTag("Player")) {
-                    InputKeys.Add(new InputEntry(
-                        name: "Fire_ChainGun",
-                        func: chainGunScript.Use,
-                        posKeys: new List<KeyCode> { KeyCode.Space, KeyCode.Mouse0 },
-                        negKeys: new List<KeyCode> { /* Not applicable */ }
-                    ));
-                }
-
+        // --- Chain Guns: position along the front/top ---
+        for (int i = 0; i < chainGuns.Count; i++) {
+            var cgSO = chainGuns[i];
+            GameObject obj = Instantiate(MasterController.Singleton.prefabs["ChainGun"], transform);
+            ChainGun chainGunScript = obj.GetComponent<ChainGun>();
+            chainGunScript.LoadData(cgSO);
+            components.TryAdd(typeof(ChainGun), new());
+            components[typeof(ChainGun)].Add(chainGunScript);
+            if (gameObject.CompareTag("Player")) {
+                InputKeys.Add(new InputEntry(
+                    name: "Fire_ChainGun",
+                    func: chainGunScript.Use,
+                    posKeys: new List<KeyCode> { KeyCode.Space, KeyCode.Mouse0 },
+                    negKeys: new List<KeyCode> { }
+                ));
             }
+            // Position along the front (top)
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            Bounds bounds = sr.sprite.bounds;
+            float width = bounds.size.x;
+            float height = bounds.size.y;
+            float step = width / (1 + chainGuns.Count);
+            float left = width * -0.5f;
+            float posX = left + (step * (i + 1));
+            float posY = height * 0.5f;
+            obj.transform.localPosition = new Vector2(posX, posY);
+        }
 
-            if (obj != null) {
-                // Position weapon based on weapon count and ship dimensions
-
-                SpriteRenderer sr = GetComponent<SpriteRenderer>(); // Get the SpriteRenderer component from this gunship
-                Bounds bounds = sr.sprite.bounds; // Get the sprite's bounds in local space (unscaled dimensions)
-
-                float width = bounds.size.x; // Extract width from the bounds (this is the actual sprite Size, not Scale)
-                float height = bounds.size.y; // Extract height from the bounds
-
-                float step = width / (1 + weapons.Count); // Calculate spacing step: divide width evenly by (weapon count + 1) for margins
-
-                float left = width * -0.5f; // Calculate left edge position (anchor is at center, so shift left by half width)
-                float posX = left + (step * (i + 1)); // Calculate X position: start from left edge, then add step * (index + 1)
-                float posY = height * 0.5f; // Calculate Y position: place at top edge of sprite (half height up from center)
-
-                // Assign the calculated local position to the weapon object
-                // Unity will automatically apply parent Scale when converting to world space
-                obj.transform.localPosition = new Vector2(posX, posY);
+        // --- Missile Launchers: position along the back/bottom ---
+        for (int i = 0; i < missleLaunchers.Count; i++) {
+            var mlSO = missleLaunchers[i];
+            GameObject obj = Instantiate(MasterController.Singleton.prefabs["MissleLauncher"], transform);
+            MissleLauncher missleLauncher = obj.GetComponent<MissleLauncher>();
+            missleLauncher.LoadData(mlSO);
+            components.TryAdd(typeof(MissleLauncher), new());
+            components[typeof(MissleLauncher)].Add(missleLauncher);
+            if (gameObject.CompareTag("Player")) {
+                InputKeys.Add(new InputEntry(
+                    name: "Fire_Missle",
+                    func: missleLauncher.Use,
+                    posKeys: new List<KeyCode> { KeyCode.Return, KeyCode.KeypadEnter, KeyCode.Mouse1 },
+                    negKeys: new List<KeyCode> { }
+                ));
             }
-
+            // Position along the back (bottom)
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            Bounds bounds = sr.sprite.bounds;
+            float width = bounds.size.x;
+            float height = bounds.size.y;
+            float step = width / (1 + missleLaunchers.Count);
+            float left = width * -0.5f;
+            float posX = left + (step * (i + 1));
+            float posY = -height * 0.5f;
+            obj.transform.localPosition = new Vector2(posX, posY);
         }
 
     }
@@ -161,15 +184,17 @@ public class GunshipController : MonoBehaviour {
         if (isDying) {
 
             //* Dying Animation Goes here *//
-            Destroy(gameObject);
+            
 
             return;
         }
 
         if (gameObject.CompareTag("Player")) {
 
-            foreach (InputEntry entry in InputKeys) {
-                entry.func(entry.CurrentValue);
+            if (!MasterController.Singleton.Autoplay) {
+                foreach (InputEntry entry in InputKeys) {
+                    entry.func(entry.CurrentValue);
+                }
             }
 
             UpdateCamera();
@@ -185,8 +210,9 @@ public class GunshipController : MonoBehaviour {
         // Get velocity info from physics
         float velocityNormalized = 0f;
         Vector3 velocityVector = Vector3.zero;
-        if (scripts.TryGetValue(typeof(CustomPhysics), out var physicsList) && physicsList.Count > 0) {
-            CustomPhysics physics = physicsList[0] as CustomPhysics;
+
+
+        if (hasPhysics) {
             if (physics != null) {
                 velocityNormalized = physics.VelocityNormalized;
                 velocityVector = physics.VelocityVector;
@@ -195,7 +221,7 @@ public class GunshipController : MonoBehaviour {
 
         // Get max chaingun warmup from all chainguns
         float maxChaingunWarmup = 0f;
-        if (scripts.TryGetValue(typeof(ChainGun), out var chaingunList)) {
+        if (components.TryGetValue(typeof(ChainGun), out var chaingunList)) {
             foreach (var cg in chaingunList) {
                 ChainGun chaingun = cg as ChainGun;
                 if (chaingun != null && chaingun.WindupNormalized > maxChaingunWarmup) {
@@ -227,7 +253,7 @@ public class GunshipController : MonoBehaviour {
             Destroy(childComponent.gameObject);
         }
 
-        scripts = new();
+        components = new();
     }
 
     public void TakeDamage(float damage) {
@@ -238,17 +264,30 @@ public class GunshipController : MonoBehaviour {
         if (CurrentHealth <= 0) isDying = true;
     }
 
-    private bool CheckValidCollision(Collider2D other) {
-        return (CompareTag("Player") && other.CompareTag("EnemyBullet"))
-            || (CompareTag("Enemy") && other.CompareTag("PlayerBullet"))
-            ;
+    private void OnTriggerEnter2D(Collider2D other) {
+        if      (CompareTag("Player") && other.CompareTag("EnemyBullet"))   ResolveBulletHit(other);
+        else if (CompareTag("Enemy") && other.CompareTag("PlayerBullet"))   ResolveBulletHit(other);
+        else if (CompareTag("Player") && other.CompareTag("Enemy"))         ResolveGunshipHit(other);
+        else if (other.CompareTag("Rock"))                                  ResolveRockHit(other);
+        else if (other.CompareTag("Missle"))                         Helper.ResolveMissleHit(other);
     }
 
-    private void OnTriggerEnter2D(Collider2D other) {
-        if (CheckValidCollision(other)) {
-            TakeDamage(1);
-            Destroy(other.gameObject); // Destroy the bullet on impact
+    private void ResolveBulletHit(Collider2D other) {
+        TakeDamage(1);
+        if (hasPhysics) {
+            physics.ApplyKnockback(other.transform.position, 10f);
         }
+        Destroy(other.gameObject); // Destroy the bullet on impact
+    }
+
+    private void ResolveRockHit(Collider2D other) {
+        TakeDamage(1);
+        other.GetComponent<Rock>().TakeDamage(100);
+    }
+
+    private void ResolveGunshipHit(Collider2D other) {
+        TakeDamage(1);
+        other.GetComponent<GunshipController>().TakeDamage(1);
     }
 
 }

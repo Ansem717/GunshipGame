@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   drag: 0.1
   angularDrag: 2
-  maximumAcceleration: 1
+  maximumAcceleration: 2
   brakeAcceleration: 8
-  maxVelocity: 2
-  jerkStrength: 0.15
+  maxVelocity: 3
+  jerkStrength: 0.5
   maxRotationalAcceleration: 180
   maxRotationalVelocity: 40
   rotationalJerkStrength: 2

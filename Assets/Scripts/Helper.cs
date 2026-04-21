@@ -75,6 +75,22 @@ public static class Helper {
         }
     }
 
+    /// <summary>
+    /// Returns a random world-space point within 2x the camera's viewport.
+    /// Viewport coordinates outside [0,1] map to off-screen world positions,
+    /// so [-0.5, 1.5] gives a 2x screen-sized area centered on the camera.
+    /// </summary>
+    public static Vector3 RandomPointInBounds(Camera cam = null) {
+        if (cam == null) cam = Camera.main;
+        if (cam == null) return Vector3.zero;
+
+        float x = Random.Range(-0.5f, 1.5f);
+        float y = Random.Range(-0.5f, 1.5f);
+        Vector3 worldPos = cam.ViewportToWorldPoint(new Vector3(x, y, cam.nearClipPlane));
+        worldPos.z = 0f; // Keep in 2D plane
+        return worldPos;
+    }
+
     public static ChildrenTree GetChildrenRecursive(Transform parent) {
         ChildrenTree p_tree = new() {obj = parent.gameObject}; //establish THIS object's heirarchy node.
 
@@ -85,4 +101,21 @@ public static class Helper {
         return p_tree;
     }
 
+    ///used by rock and gunship
+    public static void ResolveMissleHit(Collider2D other) {
+        if (other.TryGetComponent(out ActionList mal)) {
+            mal.TryGetAction("MissleSearch", out A_MissleSearch a_ms);
+            mal.TryGetAction("MissleExplosion", out A_MissleExplosion a_me);
+
+            if (a_ms != null) {
+                if (a_ms.GetDelayProgress() >= 1.0f) {
+                    mal.PushFront(new A_MissleExplosion(a_ms.data));
+                }
+            } else if (a_me != null) {
+                mal.PushFront(new A_MissleExplosion(a_me.data));
+
+            }
+
+        }
+    }
 }

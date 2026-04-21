@@ -22,6 +22,7 @@ public class ActionList : MonoBehaviour {
     public void ResetTimeMultiplier() => timeMultiplier = 1f;
 
     public bool EnablePauseWithGame;
+    [Tooltip("The order shown in the Debug view (B). Smaller numbers are at the top.")]
     public int DebugSortOrder;
 
     protected virtual void Update() {

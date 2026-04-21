@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac889460599022b4aafe8019c7c6e7de, type: 3}
   m_Name: RockPhysics_Large
   m_EditorClassIdentifier: 
+  scale: 1.8
   drag: 0.1
   angularDrag: 0.05
   maximumAcceleration: 5

@@ -307,6 +307,10 @@ public class Rock : MonoBehaviour {
             TakeDamage(1);
             Destroy(other.gameObject); // Destroy the bullet on impact
         }
+
+        if (other.CompareTag("Missle")) {
+            Helper.ResolveMissleHit(other);
+        }
     }
 
     private int GetHealthForSize(RockSize rockSize) {

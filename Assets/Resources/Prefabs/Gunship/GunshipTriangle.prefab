@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7174681890106928074}
   - component: {fileID: -2341179434426273025}
   - component: {fileID: 6562825371969299744}
+  - component: {fileID: 6885768355054008727}
   m_Layer: 0
   m_Name: GunshipTriangle
   m_TagString: Untagged
@@ -166,3 +167,18 @@ PolygonCollider2D:
       - {x: -0.5, y: -0.28866667}
       - {x: 0.5, y: -0.28866667}
   m_UseDelaunayMesh: 0
+--- !u!114 &6885768355054008727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3249102338500812460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f75049aeb0d42ed4eb21b84e74484b86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timeMultiplier: 1
+  EnablePauseWithGame: 1
+  DebugSortOrder: 0

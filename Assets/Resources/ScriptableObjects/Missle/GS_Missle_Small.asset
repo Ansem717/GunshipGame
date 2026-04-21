@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39ad858c38545d94fb5f1a877b6dbc70, type: 3}
+  m_Name: GS_Missle_Small
+  m_EditorClassIdentifier: 
+  ArmingTime: 3
+  ScanRadius: 4
+  MaxScans: 6
+  ScanInterval: 2
+  ExplosionRadius: 2
+  ExplosionDamage: 10
+  ExplosionDuration: 1.1
+  SidewaysKick: 1.5
+  PhysicsData: {fileID: 11400000, guid: e14cc063a77257f478dae51657d88167, type: 2}
+  MaxStored: 6
+  RechargeTime: 2
+  DropoffInterval: 0.6

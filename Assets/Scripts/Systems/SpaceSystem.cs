@@ -204,9 +204,12 @@ public class SpaceSystem : MonoBehaviour {
         GunshipController enemyGS = enemy.AddComponent<GunshipController>();
 
         List<MasterController.GunshipSize> shipSizes = new() { MasterController.GunshipSize.Small, MasterController.GunshipSize.Medium, MasterController.GunshipSize.Large };
+        
         enemyGS.LoadGunship(shipSizes[Random.Range(0, 3)]);
 
-        /* Insert AI */
+        if (enemy.TryGetComponent(out ActionList enemyAL)) {
+            enemyAL.PushBack(new A_SeekTarget(MasterController.Singleton.player.transform));
+        }
 
         return enemy;
     }

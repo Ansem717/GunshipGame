@@ -14,8 +14,8 @@
 using System;
 
 public enum SBFlag {
-    Blocking,
-    PlayerTurnComplete,
+    Blocking, //default state for new static blockers
+    AutoplayBlocker,
     PauseMenuExit
 }
 

@@ -89,7 +89,7 @@ public class ChainGun : MonoBehaviour {
         float currentDeviation = Mathf.Lerp(MinDeviation, MaxDeviation, windupNormalized);
 
         if (transform.parent.CompareTag("Player")) UpdateVisuals(windupNormalized, currentDeviation); //if this is the player, update the gunship visuals
-        
+
         if (windupNormalized > 0) {
             UpdateFiring(windupNormalized, currentDeviation);
         }
