@@ -41,4 +41,10 @@ public class Missle_SO : WeaponScriptableObject {
     [Tooltip("Seconds between each missle drop while firing (cluster dropoff rate)")]
     [Min(0.05f)]
     public float DropoffInterval;
+
+    [Header("UI")]
+    public Vector2 CellSize;
+    public Vector2 CellSpacing;
+    public RectOffset GridPadding;
+
 }

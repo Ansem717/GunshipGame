@@ -25,6 +25,7 @@ public class A_MissleExplosion : ActionInterface {
         explosionSR = explosionObj.AddComponent<SpriteRenderer>();
         explosionSR.sprite = MakeCircleSprite(64);
         explosionSR.color = new Color(1f, 0.5f, 0f, 1f);
+        explosionObj.transform.position = objRef.transform.position;
 
         // Hide the missle sprite during explosion animation.
         SpriteRenderer sr = objRef.GetComponent<SpriteRenderer>();
@@ -39,7 +40,6 @@ public class A_MissleExplosion : ActionInterface {
         float alpha = 1f - progress;
 
         explosionSR.color = new Color(1f, 0.5f, 0f, alpha);
-        explosionObj.transform.position = objRef.transform.position;
         explosionObj.transform.localScale = Vector3.one * radius * 2f;
 
         ApplyExplosionDamage(radius);
@@ -50,7 +50,7 @@ public class A_MissleExplosion : ActionInterface {
     }
 
     private void ApplyExplosionDamage(float radius) {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(objRef.transform.position, radius);
+        Collider2D[] hits = Physics2D.OverlapCircleAll(explosionObj.transform.position, radius);
 
         foreach (Collider2D hit in hits) {
             if (hit.gameObject == objRef) continue;

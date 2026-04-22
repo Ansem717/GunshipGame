@@ -24,3 +24,10 @@ MonoBehaviour:
   MaxStored: 12
   RechargeTime: 1
   DropoffInterval: 0.3
+  CellSize: {x: 36, y: 36}
+  CellSpacing: {x: 43.2, y: 12}
+  GridPadding:
+    m_Left: 100
+    m_Right: 32
+    m_Top: 10
+    m_Bottom: 10

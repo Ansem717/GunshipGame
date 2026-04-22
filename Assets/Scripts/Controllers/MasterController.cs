@@ -174,8 +174,9 @@ public class MasterController : MonoBehaviour {
         playerOBJ.tag = "Player";
         playerOBJ.name = "Player";
         player = playerOBJ.AddComponent<GunshipController>();
-        AttachAutoplayAction();
+        player.LoadGunship(GunshipSize.Small);
 
+        AttachAutoplayAction();
         if (player.TryGetComponent(out ActionList pal)) {
             pal.PushFront(new A_StaticBlocker(SBFlag.AutoplayBlocker));
         }

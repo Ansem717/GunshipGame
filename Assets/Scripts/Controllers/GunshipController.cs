@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GunshipController : MonoBehaviour {
 
@@ -41,14 +43,26 @@ public class GunshipController : MonoBehaviour {
 
     // OTHER DATAS
     public float MaxHealth = 100f;
-    public float CurrentHealth;
+    private float currentHealth;
     private bool isDying = false;
 
     public float PseudoMass; //ship scale
 
+    private GameObject HealthBarContainer;
+
     // PHYSICS MANAGEMENT
     private CustomPhysics physics => components[typeof(CustomPhysics)][0] as CustomPhysics;
     private bool hasPhysics => components.ContainsKey(typeof(CustomPhysics)) && components[typeof(CustomPhysics)].Count > 0;
+
+    private bool IsPlayer => gameObject.CompareTag("Player");
+
+    public float CurrentHealth {
+        get => currentHealth; 
+        set {
+            currentHealth = value;
+            if (IsPlayer) UpdateHUD();
+        }
+    }
 
     void Start() {
         components = new();
@@ -56,8 +70,6 @@ public class GunshipController : MonoBehaviour {
 
         CurrentHealth = MaxHealth;
 
-        //Load small gunship by default
-        LoadGunship(MasterController.GunshipSize.Small);
     }
 
     public void LoadGunship(MasterController.GunshipSize size) {
@@ -81,6 +93,8 @@ public class GunshipController : MonoBehaviour {
         MaxHealth = data.MaxHealth;
         CurrentHealth = data.MaxHealth * healthFrac;
 
+        UpdateHUD();
+
         foreach (CustomPhysics_SO physicsData in data.GetData<CustomPhysics_SO>()) {
             //!! Guard: If the script contains this key, we already added in a physics, so why are we still here?
             if (hasPhysics) {
@@ -95,7 +109,7 @@ public class GunshipController : MonoBehaviour {
 
             components[typeof(CustomPhysics)] = new() { physics }; //track it in the dict; we're guaranteed to only have one so this shorthand works
 
-            if (gameObject.CompareTag("Player")) {
+            if (IsPlayer) {
                 InputKeys.Add(new InputEntry(
                     name: "Physics_Move",
                     func: physics.ApplyThrustInput,
@@ -130,7 +144,8 @@ public class GunshipController : MonoBehaviour {
             chainGunScript.LoadData(cgSO);
             components.TryAdd(typeof(ChainGun), new());
             components[typeof(ChainGun)].Add(chainGunScript);
-            if (gameObject.CompareTag("Player")) {
+
+            if (IsPlayer) {
                 InputKeys.Add(new InputEntry(
                     name: "Fire_ChainGun",
                     func: chainGunScript.Use,
@@ -138,6 +153,7 @@ public class GunshipController : MonoBehaviour {
                     negKeys: new List<KeyCode> { }
                 ));
             }
+
             // Position along the front (top)
             SpriteRenderer sr = GetComponent<SpriteRenderer>();
             Bounds bounds = sr.sprite.bounds;
@@ -146,7 +162,7 @@ public class GunshipController : MonoBehaviour {
             float step = width / (1 + chainGuns.Count);
             float left = width * -0.5f;
             float posX = left + (step * (i + 1));
-            float posY = height * 0.5f;
+            float posY = height * 0.4f;
             obj.transform.localPosition = new Vector2(posX, posY);
         }
 
@@ -158,7 +174,8 @@ public class GunshipController : MonoBehaviour {
             missleLauncher.LoadData(mlSO);
             components.TryAdd(typeof(MissleLauncher), new());
             components[typeof(MissleLauncher)].Add(missleLauncher);
-            if (gameObject.CompareTag("Player")) {
+
+            if (IsPlayer) {
                 InputKeys.Add(new InputEntry(
                     name: "Fire_Missle",
                     func: missleLauncher.Use,
@@ -166,6 +183,7 @@ public class GunshipController : MonoBehaviour {
                     negKeys: new List<KeyCode> { }
                 ));
             }
+            
             // Position along the back (bottom)
             SpriteRenderer sr = GetComponent<SpriteRenderer>();
             Bounds bounds = sr.sprite.bounds;
@@ -174,7 +192,7 @@ public class GunshipController : MonoBehaviour {
             float step = width / (1 + missleLaunchers.Count);
             float left = width * -0.5f;
             float posX = left + (step * (i + 1));
-            float posY = -height * 0.5f;
+            float posY = height * 0.9f;
             obj.transform.localPosition = new Vector2(posX, posY);
         }
 
@@ -185,11 +203,19 @@ public class GunshipController : MonoBehaviour {
 
             //* Dying Animation Goes here *//
             
-
-            return;
+            if (!IsPlayer) {
+                Destroy(gameObject);
+                return;
+            }
+            //return;
         }
 
-        if (gameObject.CompareTag("Player")) {
+        // REGEN
+        if (CurrentHealth < MaxHealth) CurrentHealth += (MaxHealth / 16) * Time.deltaTime;
+        else if (CurrentHealth > MaxHealth) CurrentHealth = MaxHealth;
+
+
+        if (IsPlayer) { 
 
             if (!MasterController.Singleton.Autoplay) {
                 foreach (InputEntry entry in InputKeys) {
@@ -256,6 +282,19 @@ public class GunshipController : MonoBehaviour {
         components = new();
     }
 
+    private void UpdateHUD() {
+        if (!IsPlayer) return;
+
+        HealthBarContainer ??= GameObject.Find("HealthValueVisualBG");
+        if (HealthBarContainer == null) return;
+
+        Image ui = HealthBarContainer.transform.GetChild(0).GetComponent<Image>();
+        ui.fillAmount = Mathf.Clamp01(CurrentHealth / MaxHealth);
+
+        TextMeshProUGUI text = HealthBarContainer.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+        text.text = $"{CurrentHealth:F0} / {MaxHealth}";
+    }
+
     public void TakeDamage(float damage) {
         if (isDying) return;
 
@@ -281,13 +320,28 @@ public class GunshipController : MonoBehaviour {
     }
 
     private void ResolveRockHit(Collider2D other) {
-        TakeDamage(1);
-        other.GetComponent<Rock>().TakeDamage(100);
+
+        Rock rock = other.GetComponent<Rock>();
+        Rock.RockSize rSize = rock.size;
+        rock.TakeDamage((int)(PseudoMass * 50));
+
+        int dmgToTake = rSize switch {
+            Rock.RockSize.Large => 20,
+            Rock.RockSize.Medium => 10,
+            Rock.RockSize.Small => 5,
+            _ => 5,
+        };
+        TakeDamage(dmgToTake);
+
     }
 
     private void ResolveGunshipHit(Collider2D other) {
-        TakeDamage(1);
-        other.GetComponent<GunshipController>().TakeDamage(1);
+
+        GunshipController enemy = other.GetComponent<GunshipController>();
+        enemy.TakeDamage((int)(PseudoMass * 50));
+        TakeDamage((int)(enemy.PseudoMass * 50));
+
+
     }
 
 }

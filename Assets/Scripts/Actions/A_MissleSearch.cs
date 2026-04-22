@@ -80,7 +80,7 @@ public class A_MissleSearch : ActionInterface {
             currentScan++;
 
             if (currentScan >= data.MaxScans) {
-                owner.PushFront(new A_MissleExplosion(data));
+                owner.PushBack(new A_MissleExplosion(data));
                 State = ActionState.Done;
                 return;
             }

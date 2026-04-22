@@ -1,4 +1,6 @@
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MissleLauncher : MonoBehaviour {
 
@@ -24,13 +26,7 @@ public class MissleLauncher : MonoBehaviour {
     private CustomPhysics shipPhysics;
 
     // HUD dots
-    private UnityEngine.UI.Image[] dotImages;
-    private GameObject hudContainer;
-    private static Sprite dotSprite;
-    private const float DotSize = 12f;
-    private const float DotSpacing = 16f;
-    private const float HudMarginRight = 20f;
-    private const float HudMarginBottom = 20f;
+    private GridLayoutGroup MissleGridUI;
 
     // Reload particle system
     private ParticleSystem reloadParticles;
@@ -38,11 +34,19 @@ public class MissleLauncher : MonoBehaviour {
     /// <summary>
     /// Current missle count normalized (0-1) for UI.
     /// </summary>
-    public float StoredNormalized => (float)currentStored / MaxStored;
-    public int CurrentStored => currentStored;
+    public float StoredNormalized => (float)CurrentStored / MaxStored;
+    public bool IsPlayer => transform.parent.CompareTag("Player");
+
+    public int CurrentStored { 
+        get => currentStored; 
+        set {
+            currentStored = value;
+            if (IsPlayer) UpdateHUD();
+        }
+    }
 
     void Start() {
-        currentStored = MaxStored; // Start fully loaded
+        CurrentStored = MaxStored; // Start fully loaded
         rechargeElapsed = 0f;
         dropoffElapsed = 0f;
         misslesToDrop = 0;
@@ -50,9 +54,9 @@ public class MissleLauncher : MonoBehaviour {
 
         CreateReloadParticles();
 
-        if (transform.parent.CompareTag("Player")) {
-            CreateHUDDots();
-            UpdateHUDDots();
+        if (IsPlayer) {
+            //find hud
+            MissleGridUI = FindFirstObjectByType<GridLayoutGroup>();
         }
     }
 
@@ -61,21 +65,38 @@ public class MissleLauncher : MonoBehaviour {
         MaxStored = data.MaxStored;
         RechargeTime = data.RechargeTime;
         DropoffInterval = data.DropoffInterval;
-        currentStored = MaxStored;
+
+        if (IsPlayer) {
+            //Assert HUD
+            MissleGridUI ??= FindFirstObjectByType<GridLayoutGroup>();
+
+            //Set Scaling
+            MissleGridUI.cellSize = data.CellSize;
+            MissleGridUI.spacing = data.CellSpacing;
+            MissleGridUI.padding = data.GridPadding;
+            
+            // Update Icon Count
+            for (int i = 0; i < MissleGridUI.transform.childCount; i++) {
+                bool shouldBeActive = i < MaxStored;
+                MissleGridUI.transform.GetChild(i).gameObject.SetActive(shouldBeActive);
+            }
+        }
+
+        CurrentStored = MaxStored; 
     }
 
     void Update() {
         if (MasterController.Singleton.Paused) return;
 
         float dt = Time.deltaTime;
-        int prevStored = currentStored;
+        int prevStored = CurrentStored;
 
         // Recharge when not actively dropping missles
-        if (misslesToDrop <= 0 && currentStored < MaxStored) {
+        if (misslesToDrop <= 0 && CurrentStored < MaxStored) {
             rechargeElapsed += dt;
             if (rechargeElapsed >= RechargeTime) {
                 rechargeElapsed = 0f;
-                currentStored++;
+                CurrentStored++;
             }
         }
 
@@ -90,17 +111,16 @@ public class MissleLauncher : MonoBehaviour {
         }
 
         // Reload particle + HUD update on count change
-        if (currentStored != prevStored) {
-            UpdateHUDDots();
-            if (currentStored > prevStored && reloadParticles != null) {
+        if (CurrentStored != prevStored) {
+            if (CurrentStored > prevStored && reloadParticles != null) {
                 reloadParticles.Play();
             }
         }
     }
 
     void SpawnMissle() {
-        if (currentStored <= 0) return;
-        currentStored--;
+        if (CurrentStored <= 0) return;
+        CurrentStored--;
         rechargeElapsed = 0f; // Reset recharge timer on each drop
 
         GameObject missle = Instantiate(
@@ -137,14 +157,13 @@ public class MissleLauncher : MonoBehaviour {
     public void Use(float input) {
         if (input <= 0) return;
         if (misslesToDrop > 0) return; // Already dropping
-        if (currentStored <= 0) return; // Nothing to fire
+        if (CurrentStored <= 0) return; // Nothing to fire
 
         // Immediately drop the first missle, queue the rest
-        misslesToDrop = currentStored - 1;
+        misslesToDrop = CurrentStored - 1;
         dropoffElapsed = 0f;
         rechargeElapsed = 0f;
         SpawnMissle();
-        UpdateHUDDots();
     }
 
     void CreateReloadParticles() {
@@ -185,65 +204,24 @@ public class MissleLauncher : MonoBehaviour {
         renderer.material = new Material(Shader.Find("Sprites/Default"));
     }
 
-    void CreateHUDDots() {
-        if (dotSprite == null) {
-            int size = 32;
-            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            float center = size * 0.5f;
-            float rSq = center * center;
-            for (int y = 0; y < size; y++) {
-                for (int x = 0; x < size; x++) {
-                    float dx = x - center + 0.5f;
-                    float dy = y - center + 0.5f;
-                    tex.SetPixel(x, y, dx * dx + dy * dy <= rSq ? Color.white : Color.clear);
-                }
-            }
-            tex.Apply();
-            dotSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
-        }
+    void UpdateHUD() {
+        if (!IsPlayer) return; 
 
-        // Create a canvas on the camera for screen-space HUD
-        Camera cam = Camera.main;
-        hudContainer = new GameObject("MissleHUD");
-        Canvas canvas = hudContainer.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 100;
+        MissleGridUI ??= FindFirstObjectByType<GridLayoutGroup>();
 
-        dotImages = new UnityEngine.UI.Image[MaxStored];
-        float totalWidth = (MaxStored - 1) * DotSpacing;
+        if (MissleGridUI == null) return;
 
+        // Update Icon Count
         for (int i = 0; i < MaxStored; i++) {
-            GameObject dot = new GameObject($"MissleDot_{i}");
-            dot.transform.SetParent(hudContainer.transform, false);
+            var icon = MissleGridUI.transform.GetChild(i);
+            if (icon == null) continue;
+            if (!icon.gameObject.activeSelf) continue;
 
-            RectTransform rt = dot.AddComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(DotSize, DotSize);
-            rt.anchorMin = new Vector2(1f, 0f);
-            rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = new Vector2(
-                -HudMarginRight - totalWidth + i * DotSpacing,
-                HudMarginBottom
-            );
-
-            UnityEngine.UI.Image img = dot.AddComponent<UnityEngine.UI.Image>();
-            img.sprite = dotSprite;
-            img.color = new Color(0.2f, 1f, 0.3f, 0.9f);
-            dotImages[i] = img;
+            var img = icon.GetComponent<Image>();
+            if (img == null) continue;
+            
+            img.color = i < CurrentStored ? Color.green : new Color(0.2f, 0.2f, 0.2f, 0.5f);
         }
-    }
-
-    void UpdateHUDDots() {
-        if (dotImages == null) return;
-        for (int i = 0; i < dotImages.Length; i++) {
-            dotImages[i].color = i < currentStored
-                ? new Color(0.2f, 1f, 0.3f, 0.9f)
-                : new Color(0.2f, 0.2f, 0.2f, 0.3f);
-        }
-    }
-
-    void OnDestroy() {
-        if (hudContainer != null) Destroy(hudContainer);
     }
 
 }
