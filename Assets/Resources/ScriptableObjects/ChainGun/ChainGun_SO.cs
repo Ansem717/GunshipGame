@@ -24,6 +24,7 @@ public class ChainGun_SO : WeaponScriptableObject {
     [Header("Bullet Properties")]
     public float BulletSpeed;
     public float BulletLifetime;
+    public float BulletRange;
     [Min(0f)]
     [Tooltip("Angle spread (degrees) at minimum windup")]
     public float MinDeviation;
@@ -35,4 +36,5 @@ public class ChainGun_SO : WeaponScriptableObject {
     public Vector3 indicatorOffset;
     [Tooltip("Time in seconds for cone to fade in/out")]
     public float coneFadeDuration;
+
 }

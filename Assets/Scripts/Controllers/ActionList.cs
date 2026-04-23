@@ -52,12 +52,16 @@ public class ActionList : MonoBehaviour {
                     act.State = ActionInterface.ActionState.Running;
                 }
 
-            } else if (act.State == ActionInterface.ActionState.Running) {
+            } 
+            
+            if (act.State == ActionInterface.ActionState.Running) {
                 //Debug.Log($"{gameObject.name} Action Running: {act.name} {100f * act.GetProgress():F0}%");
                 act.elapsed += dt;
                 act.IUpdate(dt);
 
-            } else if (act.State == ActionInterface.ActionState.Done) {
+            } 
+            
+            if (act.State == ActionInterface.ActionState.Done || act.markedForDelete) {
                 //Debug.Log($"{gameObject.name} Action Done: {act.name}");
                 act.Exit();
                 act.markedForDelete = true;

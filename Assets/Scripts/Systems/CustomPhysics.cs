@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public class CustomPhysics : MonoBehaviour {
 
@@ -25,12 +27,12 @@ public class CustomPhysics : MonoBehaviour {
     private float rotationalJerk;
 
     // External forces (knockback, explosions, etc.)
-    private Vector3 externalVelocity;
+    private Vector2 externalVelocity;
 
     /// <summary>
     /// Returns the current velocity as a world-space vector (controlled + external).
     /// </summary>
-    public Vector3 VelocityVector => transform.up * velocity + externalVelocity;
+    public Vector3 VelocityVector => transform.up * velocity + (Vector3)externalVelocity;
 
     /// <summary>
     /// Returns velocity normalized to max velocity (0-1).
@@ -52,13 +54,13 @@ public class CustomPhysics : MonoBehaviour {
             Debug.LogError("ERROR: CustomPhysics script cannot be a root level entity.");
         }
 
-        velocity = 0;      
-        acceleration = 0;  
-        jerk = 0;          
+        velocity = 0;
+        acceleration = 0;
+        jerk = 0;
         rotationalVelocity = 0;
         rotationalAcceleration = 0;
         rotationalJerk = 0;
-        externalVelocity = Vector3.zero;
+        externalVelocity = Vector2.zero;
 
         moveState = MovementState.None;
         rotationState = RotationState.None;
@@ -90,11 +92,13 @@ public class CustomPhysics : MonoBehaviour {
         rotationalVelocity *= 1f - angularDrag * dt;
         externalVelocity *= 1f - drag * dt;
 
-        // Hard cap external velocity to prevent game-breaking speeds (2x normal max)
-        float hardCap = maxVelocity * 2f;
+        // Hard cap external velocity to prevent game-breaking speeds
+        float hardCap = maxVelocity;
         if (hardCap > 0f && externalVelocity.sqrMagnitude > hardCap * hardCap) {
             externalVelocity = externalVelocity.normalized * hardCap;
         }
+
+        ReduceExtenalVelocity(dt);
 
         //Apply Movement
         transform.parent.position += VelocityVector * dt;
@@ -105,7 +109,7 @@ public class CustomPhysics : MonoBehaviour {
             RotLine.gameObject.SetActive(true);
 
             // Minimum line length for visibility
-            const float minLineLength = 0.5f;
+            const float minLineLength = 0.25f;
 
             // Velocity line
             Vector3 velDir = VelocityVector;
@@ -124,6 +128,26 @@ public class CustomPhysics : MonoBehaviour {
             RotLine.gameObject.SetActive(false);
         }
 
+    }
+
+    private void ReduceExtenalVelocity(float dt) {
+
+
+        //extra decay as pilot regains control
+        if (moveState != MovementState.None) externalVelocity *= 1 - (1 * dt);
+
+
+        //split external velocity
+        Vector2 forwardPart = Vector2.Dot(externalVelocity, transform.up) * transform.up;
+        Vector2 sidewaysPart = externalVelocity - forwardPart;
+
+        if (moveState == MovementState.Forward) {
+
+            //reduce sideways external
+            externalVelocity -= sidewaysPart * VelocityNormalized * dt;
+            //reduce backwards external
+            if (Vector2.Dot(externalVelocity, transform.up) < 0) externalVelocity -= forwardPart * VelocityNormalized * dt;
+        } 
     }
 
     void HandleTranslation(float dt) {
@@ -183,17 +207,28 @@ public class CustomPhysics : MonoBehaviour {
         else rotationState = RotationState.None;
     }
 
-    public Vector3 ExternalVelocity => externalVelocity;
+    public Vector2 ExternalVelocity => externalVelocity;
     public float RotationalVelocity => rotationalVelocity;
 
-    public void ClearExternalVelocity() => externalVelocity = Vector3.zero;
-    public void ApplyImpulse(Vector3 impulse) => externalVelocity += impulse;
+    public void ClearExternalVelocity() => externalVelocity = Vector2.zero;
+    public void ApplyImpulse(Vector2 impulse) => externalVelocity += impulse;
     public void ApplyRotationalImpulse(float impulse) => rotationalVelocity += impulse;
-    public void ApplyForce(Vector3 force) => externalVelocity += force * Time.fixedDeltaTime;
+    public void ApplyForce(Vector2 force) => externalVelocity += force * Time.fixedDeltaTime;
 
-    public void ApplyKnockback(Vector3 origin, float strength) {
-        Vector3 direction = (transform.parent.position - origin).normalized;
+    public void ApplyKnockback(Vector2 origin, float strength) {
+        Vector2 distance = (Vector2)transform.parent.position - origin;
+        Vector2 direction = distance.normalized;
         externalVelocity += direction * strength;
+
+        //Debug.Log(
+        //    "ApplyKnockback -> " +
+        //    "origin: " + origin +
+        //    ", parent.position: " + transform.parent.position +
+        //    ", direction: " + direction +
+        //    ", strength: " + strength +
+        //    ", This EV: " + strength * direction +
+        //    ", externalVelocity: " + externalVelocity
+        //);
     }
 
 }

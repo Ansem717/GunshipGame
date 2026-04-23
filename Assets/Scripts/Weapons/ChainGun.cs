@@ -23,6 +23,7 @@ public class ChainGun : MonoBehaviour {
     [Header("Bullet Properties")]
     public float BulletSpeed;
     public float BulletLifetime;
+    public float BulletRange;
     [Min(0f)]
     [Tooltip("Angle spread (degrees) at minimum windup")]
     public float MinDeviation = 2f;
@@ -77,6 +78,7 @@ public class ChainGun : MonoBehaviour {
         MaximumFireRate = chainGunData.MaximumFireRate;
         BulletSpeed = chainGunData.BulletSpeed;
         BulletLifetime = chainGunData.BulletLifetime;
+        BulletRange = chainGunData.BulletRange;
         MinDeviation = chainGunData.MinDeviation;
         MaxDeviation = chainGunData.MaxDeviation;
         indicatorOffset = chainGunData.indicatorOffset;
@@ -185,7 +187,7 @@ public class ChainGun : MonoBehaviour {
 
     void SpawnBullet(float deviation, bool hasTrail) {
 
-        string bulletType = (transform.parent.tag == "Player") ? "PlayerBullet" : "EnemyBullet";
+        string bulletType = transform.parent.CompareTag("Player") ? "PlayerBullet" : "EnemyBullet";
         GameObject bullet = Instantiate(MasterController.Singleton.prefabs[bulletType], transform.position, transform.parent.rotation);
         
         if (bullet.TryGetComponent(out ActionList bal)) {
@@ -203,6 +205,11 @@ public class ChainGun : MonoBehaviour {
                     _duration: BulletLifetime
                 ),
                 callback: () => Destroy(bullet)
+            ));
+
+            bal.PushBack(new A_DestroyAfterDistance(
+                source: transform.position,
+                maxDistance: BulletRange
             ));
         }
 

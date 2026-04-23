@@ -19,6 +19,7 @@ MonoBehaviour:
   MaximumFireRate: 32
   BulletSpeed: 9
   BulletLifetime: 2
+  BulletRange: 13
   MinDeviation: 5
   MaxDeviation: 20
   indicatorOffset: {x: 0, y: -0.7, z: 0}

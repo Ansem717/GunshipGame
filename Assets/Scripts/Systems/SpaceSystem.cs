@@ -20,7 +20,7 @@ public class SpaceSystem : MonoBehaviour {
     private List<GameObject> activeRocks;
     private List<GameObject> activeEnemies;
 
-    public int MaxEnemiesOnScreen;
+    public int MaxEnemyScore;
     public float EnemySpawnCooldown;
     private float elapsed;
 
@@ -63,7 +63,7 @@ public class SpaceSystem : MonoBehaviour {
         }
 
         // ENEMY SPAWNING
-        if (activeEnemies.Count >= MaxEnemiesOnScreen) return;
+        if (GetActiveEnemyScore() >= MaxEnemyScore) return;
         elapsed += Time.deltaTime;
         if (elapsed > EnemySpawnCooldown) {
             activeEnemies.Add(Build("Enemy", false));
@@ -81,7 +81,7 @@ public class SpaceSystem : MonoBehaviour {
 
         if (!onScreen) {
             // Spawn off-screen in the direction of player velocity
-            float margin = 1.5f;
+            float margin = 2f;
             float viewWidth = max.x - min.x;
             float viewHeight = max.y - min.y;
 
@@ -97,7 +97,7 @@ public class SpaceSystem : MonoBehaviour {
             // If player is moving, spawn ahead of them; otherwise pick random edge
             if (velocity.sqrMagnitude > 0.01f) {
                 Vector3 dir = velocity.normalized;
-                
+
                 // Determine which edge(s) to spawn from based on velocity
                 // Spawn on the edge the player is moving toward
                 if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y)) {
@@ -146,8 +146,8 @@ public class SpaceSystem : MonoBehaviour {
         } else {
             // Spawn on screen with deadzone around player
             float deadzone = 2f; // Radius around player to avoid
-            Vector3 playerPos = MasterController.Singleton.player != null 
-                ? MasterController.Singleton.player.transform.position 
+            Vector3 playerPos = MasterController.Singleton.player != null
+                ? MasterController.Singleton.player.transform.position
                 : Vector3.zero;
 
             int maxAttempts = 10;
@@ -201,17 +201,31 @@ public class SpaceSystem : MonoBehaviour {
         GameObject enemy = Instantiate(MasterController.Singleton.prefabs["GunshipTriangle"], pos, Quaternion.identity);
 
         enemy.tag = "Enemy";
-        GunshipController enemyGS = enemy.AddComponent<GunshipController>();
-
-        List<MasterController.GunshipSize> shipSizes = new() { MasterController.GunshipSize.Small, MasterController.GunshipSize.Medium, MasterController.GunshipSize.Large };
-        
-        enemyGS.LoadGunship(shipSizes[Random.Range(0, 3)]);
+        enemy.AddComponent<GunshipController>();
 
         if (enemy.TryGetComponent(out ActionList enemyAL)) {
+            enemyAL.PushFront(new A_ShootTarget(MasterController.Singleton.player.transform)); //if in range, uses chaingun, blocks seek
             enemyAL.PushBack(new A_SeekTarget(MasterController.Singleton.player.transform));
         }
 
         return enemy;
     }
 
+    public int GetActiveEnemyScore() {
+        int k = 0;
+        foreach (var e in activeEnemies) {
+            if (e == null) continue;
+            var gs = e.GetComponent<GunshipController>();
+            if (gs == null) continue;
+
+            k += gs.size switch {
+                GunshipSize.Small => 1,
+                GunshipSize.Medium => 2,
+                GunshipSize.Large => 3,
+                _ => 0,
+            };
+
+        }
+        return k;
+    }
 }

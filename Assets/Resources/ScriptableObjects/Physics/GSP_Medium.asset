@@ -19,5 +19,5 @@ MonoBehaviour:
   maxVelocity: 4
   jerkStrength: 1
   maxRotationalAcceleration: 180
-  maxRotationalVelocity: 80
+  maxRotationalVelocity: 160
   rotationalJerkStrength: 3

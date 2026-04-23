@@ -35,11 +35,11 @@ public class GunshipController : MonoBehaviour {
     public Dictionary<Type, List<MonoBehaviour>> components;
 
     // CAMERAS
-    public float baseOrthoSize = 5f; // Base orthographic Size when stationary
-    public float velocityZoomOut = 2f; // Additional zoom out at max velocity
-    public float chaingunZoomOut = 0.5f; // Additional zoom out at max chaingun warmup
-    public float cameraLeadTime = 0.6f; // How far ahead the camera leads (in seconds of travel
-    public float cameraSmoothSpeed = 6f; // How smoothly the camera follows/zooms (lower = smoother)
+    public float baseOrthoSize = 9f; // Base orthographic Size when stationary
+    public float velocityZoomOut = 2.5f; // Additional zoom out at max velocity
+    public float chaingunZoomOut = 0.75f; // Additional zoom out at max chaingun warmup
+    public float cameraLeadTime = 0.8f; // How far ahead the camera leads (in seconds of travel)
+    public float cameraSmoothSpeed = 7f; // How smoothly the camera follows/zooms (lower = smoother)
 
     // OTHER DATAS
     public float MaxHealth = 100f;
@@ -47,6 +47,7 @@ public class GunshipController : MonoBehaviour {
     private bool isDying = false;
 
     public float PseudoMass; //ship scale
+    public GunshipSize size; //ship size enum
 
     private GameObject HealthBarContainer;
 
@@ -59,8 +60,12 @@ public class GunshipController : MonoBehaviour {
     public float CurrentHealth {
         get => currentHealth; 
         set {
-            currentHealth = value;
-            if (IsPlayer) UpdateHUD();
+            currentHealth = Mathf.Clamp(value, 0, MaxHealth);
+            if (IsPlayer) {
+                UpdateHUD();
+                float ratio = (value / MaxHealth) / 0.25f;
+                Time.timeScale = Mathf.Clamp(ratio, 0.2f, 1f) * 1.1f; //upscale default time scale a bit ; idk, feels better.                
+            }
         }
     }
 
@@ -70,14 +75,30 @@ public class GunshipController : MonoBehaviour {
 
         CurrentHealth = MaxHealth;
 
+        List<GunshipSize> shipSizes = new() { 
+            GunshipSize.Small, 
+            GunshipSize.Small, 
+            GunshipSize.Small, 
+            GunshipSize.Medium, 
+            GunshipSize.Medium, 
+            GunshipSize.Large 
+        };
+        
+        if (IsPlayer) {
+            LoadGunship(GunshipSize.Small);
+        } else {
+
+            LoadGunship(shipSizes[UnityEngine.Random.Range(0, shipSizes.Count)]);
+        }
+
     }
 
-    public void LoadGunship(MasterController.GunshipSize size) {
+    public void LoadGunship(GunshipSize size) {
 
         ClearComponentsAndScripts();
         InputKeys = new(); //clear current inputs
 
-        MasterController.GunshipData data = MasterController.Singleton.GunshipDatas[size];
+        GunshipData data = GunshipData.Get(size);
 
         if (data == null) {
             Debug.LogError($"GunshipController ERROR: LoadGunship - {size} data is null");
@@ -87,6 +108,7 @@ public class GunshipController : MonoBehaviour {
         //Since data exists, load in the Scale
         transform.localScale = MasterController.Singleton.prefabs["GunshipTriangle"].transform.localScale * data.Scale;
         PseudoMass = data.Scale;
+        this.size = size;
 
         //Update health with accurate ratio
         float healthFrac = CurrentHealth / MaxHealth;
@@ -200,31 +222,36 @@ public class GunshipController : MonoBehaviour {
 
     void Update() {
         if (isDying) {
-
             //* Dying Animation Goes here *//
-            
             if (!IsPlayer) {
                 Destroy(gameObject);
                 return;
+            } else {
+                isDying = false; //player has god mode
             }
-            //return;
         }
 
-        // REGEN
-        if (CurrentHealth < MaxHealth) CurrentHealth += (MaxHealth / 16) * Time.deltaTime;
+        // Regeneration
+        // Enemies regen lower than player
+        float div = IsPlayer ? 32f : 64f;
+        if (CurrentHealth < MaxHealth) CurrentHealth += (MaxHealth / div) * Time.deltaTime;
         else if (CurrentHealth > MaxHealth) CurrentHealth = MaxHealth;
 
-
-        if (IsPlayer) { 
-
+        if (IsPlayer) {
+            // Debug log for input troubleshooting
+            if (Input.GetKeyDown(KeyCode.B)) {
+                Debug.Log($"[GunshipController] Autoplay: {MasterController.Singleton.Autoplay}, InputKeys: {InputKeys.Count}");
+            }
             if (!MasterController.Singleton.Autoplay) {
                 foreach (InputEntry entry in InputKeys) {
                     entry.func(entry.CurrentValue);
                 }
             }
-
-            UpdateCamera();
         }
+    }
+
+    private void FixedUpdate() {
+        if (IsPlayer) UpdateCamera();
     }
 
     void UpdateCamera() {
@@ -298,7 +325,11 @@ public class GunshipController : MonoBehaviour {
     public void TakeDamage(float damage) {
         if (isDying) return;
 
-        CurrentHealth = Mathf.Clamp(CurrentHealth - damage, 0, MaxHealth);
+        CurrentHealth -= damage;
+
+        if (TryGetComponent(out ActionList al)) {
+            al.PushFront(new A_Explosion(radius: 1f, duration: 1f, damage: 0f, DestroySource: false, RandomizePos: true));
+        }
 
         if (CurrentHealth <= 0) isDying = true;
     }
@@ -311,11 +342,13 @@ public class GunshipController : MonoBehaviour {
         else if (other.CompareTag("Missle"))                         Helper.ResolveMissleHit(other);
     }
 
+    private bool KB = true;
     private void ResolveBulletHit(Collider2D other) {
         TakeDamage(1);
-        if (hasPhysics) {
-            physics.ApplyKnockback(other.transform.position, 10f);
-        }
+        
+        if (KB && hasPhysics) physics.ApplyKnockback(other.transform.position, 0.5f / PseudoMass);
+        KB = !KB;
+        
         Destroy(other.gameObject); // Destroy the bullet on impact
     }
 
@@ -323,24 +356,45 @@ public class GunshipController : MonoBehaviour {
 
         Rock rock = other.GetComponent<Rock>();
         Rock.RockSize rSize = rock.size;
-        rock.TakeDamage((int)(PseudoMass * 50));
+        rock.DestroyRock();
 
         int dmgToTake = rSize switch {
-            Rock.RockSize.Large => 20,
-            Rock.RockSize.Medium => 10,
-            Rock.RockSize.Small => 5,
-            _ => 5,
+            Rock.RockSize.Large => 16,
+            Rock.RockSize.Medium => 8,
+            Rock.RockSize.Small => 2,
+            _ => 0,
         };
-        TakeDamage(dmgToTake);
 
+        float v = dmgToTake / PseudoMass;
+        TakeDamage(v); // damage scales based on my size (smaller I am = more damage I take | larger = less)
+
+        if (hasPhysics) physics.ApplyKnockback(other.transform.position, v/2);
     }
 
     private void ResolveGunshipHit(Collider2D other) {
 
-        GunshipController enemy = other.GetComponent<GunshipController>();
-        enemy.TakeDamage((int)(PseudoMass * 50));
-        TakeDamage((int)(enemy.PseudoMass * 50));
+        GunshipController enmy = other.GetComponent<GunshipController>();
 
+        //damage dealt scales with ship sizes
+        int damage = 10;
+        /*
+         * Damage I will deal to the enmy...
+         * 
+         *             /--------ENEMY--------\
+         *        16  | SMALL | MEDIU | LARGE
+         *   /- SMALL |   10  |  7.6  |  5.5
+         * ME   MEDIU | 16.3  |   10  |  7.2
+         *   \- LARGE | 22.5  | 13.8  |   10
+         *      
+         */
+
+        //added `this.` for clarity and spacing
+        enmy.TakeDamage(this.PseudoMass * damage / enmy.PseudoMass);
+        this.TakeDamage(enmy.PseudoMass * damage / this.PseudoMass);
+
+        //knocked back by MY SIZE / THEIR SIZE, so if they're bigger than me, negligible, but if they're smaller, noticable.
+        if (enmy.hasPhysics) enmy.physics.ApplyKnockback(this.transform.position, this.PseudoMass / enmy.PseudoMass);
+        if (this.hasPhysics) this.physics.ApplyKnockback(enmy.transform.position, enmy.PseudoMass / this.PseudoMass);
 
     }
 

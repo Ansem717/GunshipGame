@@ -3,10 +3,10 @@ using UnityEngine;
 public class A_MissleSearch : ActionInterface {
 
     // Expands a gradient circle from the missle.
-    // After maxScans expansions, if fail to find, pushfront A_MissleExplosion.
-    // If a target is found during scan, push A_SeekTarget then A_MissleExplosion.
+    // After maxScans expansions, if fail to find, pushfront A_Explosion.
+    // If a target is found during scan, push A_SeekTarget then A_Explosion.
 
-    public readonly Missle_SO data;
+    private readonly Missle_SO data;
     private readonly string spawnerTag;
 
     private int currentScan;
@@ -70,7 +70,13 @@ public class A_MissleSearch : ActionInterface {
             A_SeekTarget seek = new A_SeekTarget(found);
             seek.blocking = true;
             owner.PushBack(seek);
-            owner.PushBack(new A_MissleExplosion(data));
+
+            owner.PushBack(new A_Explosion(
+                radius: data.ExplosionRadius,
+                duration: data.ExplosionDuration,
+                damage: data.ExplosionDamage,
+                true
+            ));
 
             State = ActionState.Done;
             return;
@@ -80,7 +86,12 @@ public class A_MissleSearch : ActionInterface {
             currentScan++;
 
             if (currentScan >= data.MaxScans) {
-                owner.PushBack(new A_MissleExplosion(data));
+                owner.PushBack(new A_Explosion(
+                    radius: data.ExplosionRadius,
+                    duration: data.ExplosionDuration,
+                    damage: data.ExplosionDamage,
+                    true
+                ));
                 State = ActionState.Done;
                 return;
             }

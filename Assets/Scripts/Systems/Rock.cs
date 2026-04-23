@@ -49,7 +49,7 @@ public class Rock : MonoBehaviour {
     // Runtime state
     private static int nextSortingOrder = 0; // Static counter for unique sorting
     private bool initialized;
-    private int currentHealth;
+    private float currentHealth;
     private int mySortingOrder;
 
     // Physics component (child object)
@@ -63,7 +63,7 @@ public class Rock : MonoBehaviour {
 
     // Public Properties
     public float HealthPercentage => (float)currentHealth / GetHealthForSize(size);
-    public int CurrentHealth => currentHealth;
+    public float CurrentHealth => currentHealth;
 
     void Awake() {
         // Ensure we have necessary components
@@ -203,7 +203,7 @@ public class Rock : MonoBehaviour {
         lineRenderer.SetPosition(vertexCount, vertices[1]); // Close the loop
     }
 
-    public void TakeDamage(int damage = 1) {
+    public void TakeDamage(float damage = 1) {
         currentHealth -= damage;
 
         if (currentHealth <= 0) {
@@ -211,7 +211,7 @@ public class Rock : MonoBehaviour {
         }
     }
 
-    private void DestroyRock() {
+    public void DestroyRock() {
         SpawnChildRocks();
         Destroy(gameObject);
     }

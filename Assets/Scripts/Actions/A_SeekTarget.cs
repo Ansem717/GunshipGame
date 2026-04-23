@@ -17,7 +17,6 @@ public class A_SeekTarget : ActionInterface {
 
     private const float ArrivalRadius = 0.5f; // How close the entity must get before the action is considered complete.
     private const float AngleDeadBand = 15f;     // Minimum angle error (degrees) required before we apply rotation.
-    private const float FullSpeedDistance = 10f;     // Distance at which the entity targets full speed.
     private const float ThrottleDeadBand = 0.05f;     // How much velocity error (0-1) is tolerated before switching thrust state.
     private const float MinVelocity = 0.4f;
 
@@ -58,7 +57,7 @@ public class A_SeekTarget : ActionInterface {
     public override void PostWait() { }
 
     public override void IUpdate(float dt) {
-        // Re-acquire physics each frame — ClearComponentsAndScripts destroys
+        // Re-acquire physics each frame : ClearComponentsAndScripts destroys
         // the old CustomPhysics child when switching gunships.
         physics = objRef.GetComponentInChildren<CustomPhysics>();
         if (physics == null) return;
@@ -71,13 +70,13 @@ public class A_SeekTarget : ActionInterface {
         Vector3 toTarget = activeTarget - objRef.transform.position;
         float distance = toTarget.magnitude;
 
-        // Arrived — mark the action as complete.
+        // Arrived - mark the action as complete.
         if (distance < ArrivalRadius) {
             State = ActionState.Done;
             return;
         }
 
-        // Debug line: owner → active target.
+        // Debug line: owner to active target.
         if (MasterController.Singleton.DebugFlag) {
             debugLine.gameObject.SetActive(true);
             debugLine.SetPosition(0, objRef.transform.position);
@@ -86,14 +85,16 @@ public class A_SeekTarget : ActionInterface {
             debugLine.gameObject.SetActive(false);
         }
 
-        float aimBias = 0;//Random.Range(-6f, 6f);
+        if (objRef == null && debugLine.gameObject != null) {
+            Object.Destroy(debugLine.gameObject);
+        }
 
         // Compute how many degrees we need to rotate to face the target.
         // Positive = target is to our left, negative = target is to our right.
-        float angle = Vector3.SignedAngle(objRef.transform.up, toTarget.normalized, Vector3.forward) + aimBias;
+        float angle = Vector3.SignedAngle(objRef.transform.up, toTarget.normalized, Vector3.forward);
 
         // Predictive rotation: estimate the angle we'd sweep if we started braking right now.
-        // brakeAngle = v² / (2a) — the classic kinematic stopping distance, applied to rotation.
+        // brakeAngle = v^2 / (2a) - the classic kinematic stopping distance, applied to rotation.
         // If that sweep would carry us past the target, flip the input to start decelerating early.
         float rotVel = physics.RotationalVelocity;
         float brakeAngle = (rotVel * rotVel) / (2f * physics.maxRotationalAcceleration);
@@ -111,14 +112,31 @@ public class A_SeekTarget : ActionInterface {
         }
 
         // Aggressive seek: always target max speed unless facing error is large.
-        float facingFactor = Mathf.InverseLerp(180f, 30f, Mathf.Abs(angle)); // sharper cutoff for slowing
-        float desiredVelocity = Mathf.Lerp(MinVelocity, 1f, facingFactor); // Only slow for large turns
+        Vector3 toTargetDir = toTarget.normalized;
+        Vector3 forward = objRef.transform.up;
 
-        // If facing is good (angle small), go full speed. If not, slow down just enough to turn.
+        // how well we're actually moving toward the target
+        float approach = Vector3.Dot(forward, toTargetDir);
+
+        // keep existing facing-based speed shaping
+        float facingFactor = Mathf.InverseLerp(180f, 30f, Mathf.Abs(angle));
+        float desiredVelocity = Mathf.Lerp(MinVelocity, 1f, facingFactor);
+
+        // throttle thrust if we're not actually contributing to closing distance
+        float thrustGate = Mathf.InverseLerp(-0.2f, 0.8f, approach);
+        desiredVelocity *= thrustGate;
+
+        // optional: stop wasting thrust when drifting away tangentially
+        float radialVelocity = Vector3.Dot(physics.VelocityVector, toTargetDir);
+        if (radialVelocity > 0f) {
+            desiredVelocity = Mathf.Max(desiredVelocity, MinVelocity);
+        }
+
         float velocityError = desiredVelocity - physics.VelocityNormalized;
-        if (velocityError > ThrottleDeadBand)        physics.ApplyThrustInput(1f);   // accelerate
-        else if (velocityError < -ThrottleDeadBand)  physics.ApplyThrustInput(-1f);  // brake
-        else                                         physics.ApplyThrustInput(0f);   // coast
+
+        if (velocityError > ThrottleDeadBand)       physics.ApplyThrustInput(1f);
+        else if (velocityError < -ThrottleDeadBand) physics.ApplyThrustInput(-1f);
+        else                                        physics.ApplyThrustInput(0f);
     }
 
     public override void Exit() {

@@ -105,15 +105,21 @@ public static class Helper {
     public static void ResolveMissleHit(Collider2D other) {
         if (other.TryGetComponent(out ActionList mal)) {
             mal.TryGetAction("MissleSearch", out A_MissleSearch a_ms);
-            mal.TryGetAction("MissleExplosion", out A_MissleExplosion a_me);
 
-            if (a_ms != null) {
-                if (a_ms.GetDelayProgress() >= 1.0f) {
-                    mal.PushFront(new A_MissleExplosion(a_ms.data));
+            Missle_SO data = other.GetComponent<MissleModel>().Data;
+            var boom = new A_Explosion(
+                radius: data.ExplosionRadius,
+                duration: data.ExplosionDuration,
+                damage: data.ExplosionDamage,
+                true
+            );
+
+            if (a_ms != null) { //if we're searching...
+                if (a_ms.GetDelayProgress() >= 1.0f) { //check the arming time...
+                    mal.PushFront(boom); //we're armed, so collisions are valid!
                 }
-            } else if (a_me != null) {
-                mal.PushFront(new A_MissleExplosion(a_me.data));
-
+            } else {
+                mal.PushFront(boom); //we're not searching, so collsions are valid!
             }
 
         }

@@ -129,6 +129,8 @@ public class MissleLauncher : MonoBehaviour {
             transform.parent.rotation
         );
 
+        missle.GetComponent<MissleModel>().Data = missleData;
+
         // Give the missle an initial velocity matching the ship so it doesn't fall behind
         // Plus a random sideways kick perpendicular to the ship's facing
         CustomPhysics misslePhysics = missle.GetComponentInChildren<CustomPhysics>();
